@@ -1,0 +1,64 @@
+{
+  "modelo": "Random Forest",
+  "estrategia_balanceo": "class_weight",
+  "preprocesamiento": "StandardScaler",
+  "calibracion": "sigmoide (regresión logística sobre puntajes fuera de pliegue)",
+  "columnas_entrada": [
+    "fallas_llamadas",
+    "quejas",
+    "antiguedad",
+    "nivel_cargo",
+    "segundos_uso",
+    "frecuencia_uso",
+    "frecuencia_sms",
+    "numeros_distintos",
+    "grupo_edad",
+    "plan_tarifario",
+    "edad"
+  ],
+  "umbral": 0.37,
+  "hiperparametros": {
+    "modelo__max_depth": "15",
+    "modelo__min_samples_leaf": "1",
+    "modelo__n_estimators": "400"
+  },
+  "metricas_anidadas_entrenamiento": {
+    "F1": 0.8509451425014014,
+    "F1_desviacion": 0.0758463452206477,
+    "Recall": 0.882628205128205,
+    "Precision": 0.8231142755106091,
+    "Precision_promedio": 0.895499049109816,
+    "ROC_AUC": 0.9800282430102762,
+    "Brier": 0.0383467057368243
+  },
+  "metricas_test": {
+    "F1": 0.8571428571428571,
+    "Recall": 0.8737864077669902,
+    "Precision": 0.8411214953271028,
+    "ROC_AUC": 0.981968193015505,
+    "Accuracy": 0.9530516431924883,
+    "Precision_promedio": 0.933403150957092,
+    "Brier": 0.03465032913435302
+  },
+  "intervalos_bootstrap_test_95": {
+    "F1": [
+      0.8,
+      0.9139861751152073
+    ],
+    "Recall": [
+      0.8,
+      0.9327871148459383
+    ],
+    "Precision": [
+      0.7567508813160988,
+      0.9293164200140944
+    ],
+    "Precision_promedio": [
+      0.8812963956198441,
+      0.9675044398840207
+    ]
+  },
+  "fecha_entrenamiento": "2026-10-10T22:54:08",
+  "version_sklearn": "1.9.1",
+  "version_imblearn": "0.14.2"
+}
