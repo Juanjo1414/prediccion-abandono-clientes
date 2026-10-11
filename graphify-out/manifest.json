@@ -1,92 +1,452 @@
 {
   "app.py": {
-    "mtime": 1790892067.1476638,
-    "seen": 1790897531.5110161,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
-    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    "mtime": 1791313805.6904597,
+    "seen": 1791694014.3474438,
+    "ast_hash": "6b172e741ae91f28aedadd19fefc76e2",
+    "semantic_hash": ""
   },
   "pyproject.toml": {
-    "mtime": 1790894496.5433195,
-    "seen": 1790897531.5110302,
-    "ast_hash": "08f46e96c3c096d533046834eb5c1e1d",
-    "semantic_hash": "08f46e96c3c096d533046834eb5c1e1d"
+    "mtime": 1791246703.196828,
+    "seen": 1791694014.347456,
+    "ast_hash": "62509a9a6b19c33a87518325f044a7ac",
+    "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790897605.6549466,
-    "seen": 1790897625.3237655,
-    "ast_hash": "4f955fc28b059f1b8b02deb171686f7b",
+    "mtime": 1791245504.765337,
+    "seen": 1791694014.3474588,
+    "ast_hash": "3cc3d019ca2025c78293080517d9891a",
     "semantic_hash": ""
   },
   "PLAN.md": {
-    "mtime": 1790894812.776201,
-    "seen": 1790897531.511039,
-    "ast_hash": "82acf93810d7ab33f876735ab4cb1826",
-    "semantic_hash": "82acf93810d7ab33f876735ab4cb1826"
+    "mtime": 1791306375.5831954,
+    "seen": 1791694014.3474615,
+    "ast_hash": "42657f2ae9bf6b3352ffde8a735ffc38",
+    "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790896490.4901798,
-    "seen": 1790897531.511042,
-    "ast_hash": "563e6f303c47edb44b1c6029a1950f9f",
-    "semantic_hash": "563e6f303c47edb44b1c6029a1950f9f"
-  },
-  "requirements.txt": {
-    "mtime": 1790892211.9242783,
-    "seen": 1790897531.5110445,
-    "ast_hash": "17fdde1a41e3ff992e3710eef6a53ac9",
-    "semantic_hash": "17fdde1a41e3ff992e3710eef6a53ac9"
-  },
-  "figuras/correlacion_phik_metadatos.png": {
-    "mtime": 1790895187.231582,
-    "seen": 1790897531.5110474,
-    "ast_hash": "a3fdc67ef424e7e0578d2e6a6b2f9836",
-    "semantic_hash": "a3fdc67ef424e7e0578d2e6a6b2f9836"
-  },
-  "figuras/correlacion_top20_waps.png": {
-    "mtime": 1790895188.7311468,
-    "seen": 1790897531.5110497,
-    "ast_hash": "2ccfdc1045fedfeed9b16b7f617d9b4c",
-    "semantic_hash": "2ccfdc1045fedfeed9b16b7f617d9b4c"
-  },
-  "figuras/detecciones_por_fila.png": {
-    "mtime": 1790895182.32206,
-    "seen": 1790897531.5110524,
-    "ast_hash": "13a59a16e794e6e944105711af044466",
-    "semantic_hash": "13a59a16e794e6e944105711af044466"
-  },
-  "figuras/distribucion_bf_test.png": {
-    "mtime": 1790895179.6602795,
-    "seen": 1790897531.5110545,
-    "ast_hash": "7ba3a4a1760695b6886506f7c822688c",
-    "semantic_hash": "7ba3a4a1760695b6886506f7c822688c"
-  },
-  "figuras/distribucion_bf_train.png": {
-    "mtime": 1790895179.2780604,
-    "seen": 1790897531.5110571,
-    "ast_hash": "fa87212de0e565475a03757802e5a626",
-    "semantic_hash": "fa87212de0e565475a03757802e5a626"
-  },
-  "figuras/histograma_senales_detectadas.png": {
-    "mtime": 1790895182.08722,
-    "seen": 1790897531.5110602,
-    "ast_hash": "4603ce1a5610c9328ddccc8488e96463",
-    "semantic_hash": "4603ce1a5610c9328ddccc8488e96463"
-  },
-  "figuras/mapa_edificios.png": {
-    "mtime": 1790895180.433526,
-    "seen": 1790897531.511063,
-    "ast_hash": "790f9015385d63a294a920aa0f0aa02f",
-    "semantic_hash": "790f9015385d63a294a920aa0f0aa02f"
-  },
-  "figuras/mapa_pisos_edificio0.png": {
-    "mtime": 1790895181.4826987,
-    "seen": 1790897531.5110652,
-    "ast_hash": "0007a87a30e117ef446003a748c2670b",
-    "semantic_hash": "0007a87a30e117ef446003a748c2670b"
+    "mtime": 1791313993.870879,
+    "seen": 1791694014.3474631,
+    "ast_hash": "76eff60ad9cddafb2f76ee2a4c09388d",
+    "semantic_hash": ""
   },
   ".claude/settings.json": {
     "mtime": 1790897605.6728234,
     "seen": 1790897625.3237507,
     "ast_hash": "d52bdbb556ce58d72ec9e6108b4d40b7",
+    "semantic_hash": ""
+  },
+  "churn/app.py": {
+    "mtime": 1791692623.9046338,
+    "seen": 1791694014.3474474,
+    "ast_hash": "7d21dcdd27296482db9e2ced317f21b2",
+    "semantic_hash": ""
+  },
+  "churn/data/particion_01.json": {
+    "mtime": 1791585725.6502776,
+    "seen": 1791694014.3474488,
+    "ast_hash": "033d9d855a9215bcd78ff75ba35c11f0",
+    "semantic_hash": ""
+  },
+  "churn/data/procedencia.json": {
+    "mtime": 1791691879.3096023,
+    "seen": 1791694014.3474498,
+    "ast_hash": "dd2b985e1b878533cf2a6ea95a35317b",
+    "semantic_hash": ""
+  },
+  "churn/models/metadata_modelo.json": {
+    "mtime": 1791690848.8726091,
+    "seen": 1791694014.347451,
+    "ast_hash": "63ccc0cb689cfa10fd343b7d6e669dfa",
+    "semantic_hash": ""
+  },
+  "churn/pyproject.toml": {
+    "mtime": 1791585725.6875112,
+    "seen": 1791694014.3474522,
+    "ast_hash": "379ace6573a5f5aa5f83a36daf8a2a8b",
+    "semantic_hash": ""
+  },
+  "churn/resultados/auditoria_resumen.json": {
+    "mtime": 1791691879.2794821,
+    "seen": 1791694014.3474534,
+    "ast_hash": "01c2a552192e9487eaaed5852642fa1f",
+    "semantic_hash": ""
+  },
+  "models/metadata_modelo.json": {
+    "mtime": 1791692148.9678085,
+    "seen": 1791694014.3474545,
+    "ast_hash": "dbdefd0626d8a2e42431cfbdfe796746",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1791306362.992257,
+    "seen": 1791694014.3474576,
+    "ast_hash": "6a38ba0d1a739245ef675af560324249",
+    "semantic_hash": ""
+  },
+  "ESTADO.md": {
+    "mtime": 1791693765.2205036,
+    "seen": 1791694014.3474598,
+    "ast_hash": "6a2c683526843bd76a6a86d2a2bf7a2d",
+    "semantic_hash": ""
+  },
+  "churn/AGENTS.md": {
+    "mtime": 1791585725.6299846,
+    "seen": 1791694014.347464,
+    "ast_hash": "1e27d70c8a46ae3497b84a85f5f8eb53",
+    "semantic_hash": ""
+  },
+  "churn/CLAUDE.md": {
+    "mtime": 1791585725.6319935,
+    "seen": 1791694014.3474653,
+    "ast_hash": "771faa62feb60b7de901a397aebb29b0",
+    "semantic_hash": ""
+  },
+  "churn/ESTADO.md": {
+    "mtime": 1791693894.3409426,
+    "seen": 1791694014.3474667,
+    "ast_hash": "47d55bb864c5201e577310c96b81aa18",
+    "semantic_hash": ""
+  },
+  "churn/PLAN.md": {
+    "mtime": 1791594105.2657413,
+    "seen": 1791694014.3474677,
+    "ast_hash": "b8a664d68182b00c808b341d776b9a1d",
+    "semantic_hash": ""
+  },
+  "churn/README.md": {
+    "mtime": 1791585725.6369963,
+    "seen": 1791694014.3474693,
+    "ast_hash": "dae855901147c0743bc310db453472b3",
+    "semantic_hash": ""
+  },
+  "churn/informe/informe.html": {
+    "mtime": 1791693874.442209,
+    "seen": 1791694014.3474705,
+    "ast_hash": "9651b77c7b4178040cdab3116bd7349e",
+    "semantic_hash": ""
+  },
+  "churn/presentacion/presentacion.html": {
+    "mtime": 1791693870.758698,
+    "seen": 1791694014.3474724,
+    "ast_hash": "c342de44ab9e4db6b77825f3f159b651",
+    "semantic_hash": ""
+  },
+  "churn/resultados/AUDITORIA.md": {
+    "mtime": 1791585725.722965,
+    "seen": 1791694014.347474,
+    "ast_hash": "c4ae2ab5137aa6200f2e53d0a71fc084",
+    "semantic_hash": ""
+  },
+  "informe/informe.html": {
+    "mtime": 1791312943.2490027,
+    "seen": 1791694014.3474755,
+    "ast_hash": "631ad6ff2a32c76db8d190bf410896d6",
+    "semantic_hash": ""
+  },
+  "presentacion/presentacion.html": {
+    "mtime": 1791311507.7095356,
+    "seen": 1791694014.3474767,
+    "ast_hash": "df882cd84f7554a496d550d459140d8f",
+    "semantic_hash": ""
+  },
+  "churn/informe/Informe_Final.pdf": {
+    "mtime": 1791693883.8962042,
+    "seen": 1791694014.3474786,
+    "ast_hash": "859d774e453672fe8f030c05ee1d4bf9",
+    "semantic_hash": ""
+  },
+  "informe/Informe_Final.pdf": {
+    "mtime": 1791312947.1493962,
+    "seen": 1791694014.3474798,
+    "ast_hash": "466d98f1741c898eb47ad7b55c3be110",
+    "semantic_hash": ""
+  },
+  "churn/figuras/00_distribucion_clase_auditoria.png": {
+    "mtime": 1791691879.173193,
+    "seen": 1791694014.3474813,
+    "ast_hash": "7853fbe4fcad6589038e57e7a84e5bb6",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_boxplots_por_clase.png": {
+    "mtime": 1791691890.7558444,
+    "seen": 1791694014.347483,
+    "ast_hash": "bf5d11826dca932f7a4c72d068855b90",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_categorica_grupo_edad.png": {
+    "mtime": 1791691887.187754,
+    "seen": 1791694014.347484,
+    "ast_hash": "53e7ac3ad4b80ab87e92417fb9b7956d",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_categorica_nivel_cargo.png": {
+    "mtime": 1791691886.5149612,
+    "seen": 1791694014.3474855,
+    "ast_hash": "ddec5af75dd6a2ff8fa10e8a3f5fc054",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_categorica_plan_tarifario.png": {
+    "mtime": 1791691887.669599,
+    "seen": 1791694014.3474867,
+    "ast_hash": "f80bca9e352d52b515f9ba057c9a0e8d",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_categorica_quejas.png": {
+    "mtime": 1791691885.9107492,
+    "seen": 1791694014.3474877,
+    "ast_hash": "f9caa014e80cf656a357b985f0015677",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_correlacion_phik.png": {
+    "mtime": 1791691892.8179822,
+    "seen": 1791694014.3474894,
+    "ast_hash": "ef4b3fcf124bd5af55c0431e5239223e",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_distribucion_clase.png": {
+    "mtime": 1791691885.559842,
+    "seen": 1791694014.3474908,
+    "ast_hash": "cf6f4606c5544e007aa87b6318530ba7",
+    "semantic_hash": ""
+  },
+  "churn/figuras/01_histogramas.png": {
+    "mtime": 1791691888.9073973,
+    "seen": 1791694014.347494,
+    "ast_hash": "61c3e5d1725384155cce92481f0a6f31",
+    "semantic_hash": ""
+  },
+  "churn/figuras/02_comparacion_rasgos.png": {
+    "mtime": 1791691907.4916575,
+    "seen": 1791694014.3475056,
+    "ast_hash": "9b95c991ba6e951dc992c4115bfcc139",
+    "semantic_hash": ""
+  },
+  "churn/figuras/02_pca_varianza.png": {
+    "mtime": 1791691903.3828542,
+    "seen": 1791694014.347507,
+    "ast_hash": "97b5ecce4c17d43d003945577b76f9d9",
+    "semantic_hash": ""
+  },
+  "churn/figuras/03_accuracy_vs_f1.png": {
+    "mtime": 1791691040.4680445,
+    "seen": 1791694014.3475082,
+    "ast_hash": "37784e75409be1bf8ae97610c1778475",
+    "semantic_hash": ""
+  },
+  "churn/figuras/03_boxplot_f1_por_particion.png": {
+    "mtime": 1791691040.013061,
+    "seen": 1791694014.3475096,
+    "ast_hash": "1af75f6a6d277863c408a4e570c62dc5",
+    "semantic_hash": ""
+  },
+  "churn/figuras/03_heatmap_f1_modelo_estrategia.png": {
+    "mtime": 1791691038.8275826,
+    "seen": 1791694014.3475108,
+    "ast_hash": "b8ee5f7408cf58444a10f754415d4457",
+    "semantic_hash": ""
+  },
+  "churn/figuras/03_heatmap_recall_modelo_estrategia.png": {
+    "mtime": 1791691039.476822,
+    "seen": 1791694014.3475122,
+    "ast_hash": "a388127b13422bce811482fab5044fff",
+    "semantic_hash": ""
+  },
+  "churn/figuras/04_curva_calibracion_cv.png": {
+    "mtime": 1791690840.8362322,
+    "seen": 1791694014.3475137,
+    "ast_hash": "4b01daa7e9cc0666b8715ef42eb32939",
+    "semantic_hash": ""
+  },
+  "churn/figuras/04_curva_calibracion_test.png": {
+    "mtime": 1791690841.932442,
+    "seen": 1791694014.347516,
+    "ast_hash": "d007c6f0092bda92674ed07e526c5d66",
+    "semantic_hash": ""
+  },
+  "churn/figuras/04_curva_precision_recall_test.png": {
+    "mtime": 1791690841.685568,
+    "seen": 1791694014.3475175,
+    "ast_hash": "421958e2fdf023fe7ba5d0e6b3a61a87",
+    "semantic_hash": ""
+  },
+  "churn/figuras/04_curva_roc_test.png": {
+    "mtime": 1791690841.4483378,
+    "seen": 1791694014.347519,
+    "ast_hash": "f71dde8293c8e6d8ce46e5cec34665b0",
+    "semantic_hash": ""
+  },
+  "churn/figuras/04_f1_recall_precision_vs_umbral.png": {
+    "mtime": 1791690840.5482123,
+    "seen": 1791694014.3475206,
+    "ast_hash": "8ac1b88ebbbc5c35105c5743dff4cb05",
+    "semantic_hash": ""
+  },
+  "churn/figuras/04_matriz_confusion_test.png": {
+    "mtime": 1791690841.2206693,
+    "seen": 1791694014.3475218,
+    "ast_hash": "72fbc8ce1af146572d3f16ddeff0820a",
+    "semantic_hash": ""
+  },
+  "figuras/01_boxplots_por_clase.png": {
+    "mtime": 1791692181.7403371,
+    "seen": 1791694014.3475237,
+    "ast_hash": "dcadaed35769a97c1462470f2430effa",
+    "semantic_hash": ""
+  },
+  "figuras/01_categorica_ghazard.png": {
+    "mtime": 1791692177.0521002,
+    "seen": 1791694014.3475246,
+    "ast_hash": "793d461a0a649594580f88f68057d957",
+    "semantic_hash": ""
+  },
+  "figuras/01_categorica_seismic.png": {
+    "mtime": 1791692176.0201075,
+    "seen": 1791694014.347526,
+    "ast_hash": "cae2b72a53f4c469e49ab9c76110ba9e",
+    "semantic_hash": ""
+  },
+  "figuras/01_categorica_seismoacoustic.png": {
+    "mtime": 1791692176.3788984,
+    "seen": 1791694014.347528,
+    "ast_hash": "46959201fa106c96afce098cee89ddcd",
+    "semantic_hash": ""
+  },
+  "figuras/01_categorica_shift.png": {
+    "mtime": 1791692176.729073,
+    "seen": 1791694014.3475294,
+    "ast_hash": "4d413ec75cbda6cc1fa6ef40eed43e0e",
+    "semantic_hash": ""
+  },
+  "figuras/01_correlacion_phik.png": {
+    "mtime": 1791692188.845961,
+    "seen": 1791694014.347531,
+    "ast_hash": "310b87bca39989b5e39a481bb1dd88b4",
+    "semantic_hash": ""
+  },
+  "figuras/01_distribucion_clase.png": {
+    "mtime": 1791692175.78406,
+    "seen": 1791694014.3475323,
+    "ast_hash": "aa7c2e0ab30a6ceced20ed716e2d11b7",
+    "semantic_hash": ""
+  },
+  "figuras/01_histogramas_numericas.png": {
+    "mtime": 1791692178.6886175,
+    "seen": 1791694014.347534,
+    "ast_hash": "63644cb3b94b3f0ede10cc4aa63d3b8e",
+    "semantic_hash": ""
+  },
+  "figuras/02_boxplots_MinMaxScaler.png": {
+    "mtime": 1791692199.5232143,
+    "seen": 1791694014.3475354,
+    "ast_hash": "e71b7d876fb8991320dc68d64401d3af",
+    "semantic_hash": ""
+  },
+  "figuras/02_boxplots_Sin escalar.png": {
+    "mtime": 1791692199.1707108,
+    "seen": 1791694014.3475368,
+    "ast_hash": "56f4b8c342a8837c3af85dc174eef38f",
+    "semantic_hash": ""
+  },
+  "figuras/02_boxplots_StandardScaler.png": {
+    "mtime": 1791692199.8813863,
+    "seen": 1791694014.3475385,
+    "ast_hash": "fd55c5e931c2bca0c6b83f7018d9162d",
+    "semantic_hash": ""
+  },
+  "figuras/02_pca_2d_por_clase.png": {
+    "mtime": 1791692209.8100848,
+    "seen": 1791694014.34754,
+    "ast_hash": "517075259b07dc8e78db29d40eefe056",
+    "semantic_hash": ""
+  },
+  "figuras/02_pca_varianza_acumulada.png": {
+    "mtime": 1791692209.514272,
+    "seen": 1791694014.3475413,
+    "ast_hash": "0e37ed70a62c82ad13d7e522786722c8",
+    "semantic_hash": ""
+  },
+  "figuras/02_rfecv_curva.png": {
+    "mtime": 1791692219.9755304,
+    "seen": 1791694014.3475428,
+    "ast_hash": "f7f49e26d87a0ad2cf13339e6158c4dc",
+    "semantic_hash": ""
+  },
+  "figuras/02_selectkbest_f1_vs_k.png": {
+    "mtime": 1791692217.5870857,
+    "seen": 1791694014.3475444,
+    "ast_hash": "7ef66ec4484b8f04d9e37c87c2b84559",
+    "semantic_hash": ""
+  },
+  "figuras/02_sfs_f1_vs_k.png": {
+    "mtime": 1791692371.9411151,
+    "seen": 1791694014.3475459,
+    "ast_hash": "9c37b487164d55e26f4dd3c6f4978085",
+    "semantic_hash": ""
+  },
+  "figuras/02_shap_barras.png": {
+    "mtime": 1791692373.2852368,
+    "seen": 1791694014.3475473,
+    "ast_hash": "408614441968b86ab3de31662861a5b0",
+    "semantic_hash": ""
+  },
+  "figuras/02_shap_beeswarm.png": {
+    "mtime": 1791692372.80989,
+    "seen": 1791694014.3475492,
+    "ast_hash": "441016484b556d8d0951cb373eb10e34",
+    "semantic_hash": ""
+  },
+  "figuras/03_accuracy_vs_f1.png": {
+    "mtime": 1791692427.734821,
+    "seen": 1791694014.3475504,
+    "ast_hash": "924a306ab4101a5df70cbc0a4ccfcacb",
+    "semantic_hash": ""
+  },
+  "figuras/03_boxplot_f1_por_particion.png": {
+    "mtime": 1791692427.3450086,
+    "seen": 1791694014.3475523,
+    "ast_hash": "106f75397d5c4032a410d9b9d3c0423f",
+    "semantic_hash": ""
+  },
+  "figuras/03_heatmap_f1_modelo_estrategia.png": {
+    "mtime": 1791692426.1663742,
+    "seen": 1791694014.347554,
+    "ast_hash": "91de2daf3a2fc0159651ad0cb899f849",
+    "semantic_hash": ""
+  },
+  "figuras/03_heatmap_recall_modelo_estrategia.png": {
+    "mtime": 1791692426.7890143,
+    "seen": 1791694014.3475556,
+    "ast_hash": "28be09c8649be3f1158138bb47861d64",
+    "semantic_hash": ""
+  },
+  "figuras/04_curva_calibracion_cv.png": {
+    "mtime": 1791692124.0411708,
+    "seen": 1791694014.347557,
+    "ast_hash": "16a172b07b0b29717c553d9694a32e8f",
+    "semantic_hash": ""
+  },
+  "figuras/04_curva_precision_recall_test.png": {
+    "mtime": 1791692148.7180648,
+    "seen": 1791694014.3475583,
+    "ast_hash": "063885c7e64155d8038e0e8eacb87ed6",
+    "semantic_hash": ""
+  },
+  "figuras/04_curva_roc_test.png": {
+    "mtime": 1791692148.2963402,
+    "seen": 1791694014.3475597,
+    "ast_hash": "5c29a8705146e0965b2e5e99a451c93a",
+    "semantic_hash": ""
+  },
+  "figuras/04_f1_recall_precision_vs_umbral.png": {
+    "mtime": 1791692123.7394962,
+    "seen": 1791694014.347561,
+    "ast_hash": "66f2f8aaa5927e3256b497c6a753429f",
+    "semantic_hash": ""
+  },
+  "figuras/04_matriz_confusion_test.png": {
+    "mtime": 1791692147.8696778,
+    "seen": 1791694014.3475623,
+    "ast_hash": "38e758dd13364409d5a9657be67bab01",
     "semantic_hash": ""
   }
 }

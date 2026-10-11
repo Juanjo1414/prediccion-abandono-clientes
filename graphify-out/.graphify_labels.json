@@ -1,1 +1,17 @@
-{"0": "Metadatos y fuga de datos", "1": "Notebooks de referencia y pipeline", "2": "Dataset y validez del proyecto", "3": "Reglas del proyecto", "4": "Mapa de pisos, edificio 0", "5": "App y artefactos de rasgos", "6": "Modelo final y F1 macro", "7": "Correlacion entre WAPs", "8": "Distribucion de clases en test", "9": "Mapa de edificios", "10": "Dispersion de senales por fila", "11": "Distribucion de clases en entrenamiento", "12": "Distribucion de intensidad RSSI", "13": "Stack tecnologico y dependencias", "14": "Script app.py", "15": "Paquete del proyecto"}
+{
+  "0": "AGENTS.md — Predicción de peligro sísmico en minas de carbón",
+  "1": "PLAN.md (plan de implementación)",
+  "2": "construir_interfaz",
+  "3": "formato_numero",
+  "4": "evaluar_turno",
+  "5": "construir_interfaz",
+  "6": "Auditoría del dataset — paso 3",
+  "7": "Reglas del proyecto de abandono",
+  "8": "Estado del proyecto",
+  "9": "Predicción de abandono de clientes",
+  "10": "PLAN.md",
+  "11": "CLAUDE.md",
+  "12": "prediccion-abandono-clientes",
+  "13": "prediccion-sismica-minas",
+  "14": "churn/app.py"
+}
