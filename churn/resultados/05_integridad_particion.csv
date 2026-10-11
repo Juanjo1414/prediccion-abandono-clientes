@@ -1,0 +1,4 @@
+Archivo,Filas,Igual_al_original
+train.csv,2511,True
+test.csv,639,True
+test_original.csv,639,True

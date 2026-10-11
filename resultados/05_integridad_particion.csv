@@ -1,0 +1,4 @@
+Archivo,Filas,Idéntico_al_rehecho
+train.csv,2062,True
+test.csv,516,True
+test_original.csv,516,True

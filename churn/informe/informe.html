@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Predicción de abandono de clientes de telecomunicaciones — Informe final</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{--tinta:#0B1B33;--pizarra:#334155;--gris:#5B6B82;--linea:#CBD6E6;--fondo:#F4F7FB;--ambar:#F59E0B;--ambar-o:#B45309;--azul:#1E40AF}
+@page{size:A4;margin:24mm 22mm 24mm 22mm;@bottom-center{content:counter(page);font-family:'Fira Sans Condensed',Arial,sans-serif;font-size:10pt;color:#5B6B82}}
+@page :first{margin:0;@bottom-center{content:none}}
+*{box-sizing:border-box}
+html{font-size:11pt}
+body{font-family:'Source Serif 4',Georgia,'Times New Roman',serif;color:var(--tinta);line-height:1.5;margin:0;text-align:justify;hyphens:auto}
+h1,h2,h3,h4{font-family:'Fira Sans Condensed','Arial Narrow',Arial,sans-serif;color:var(--tinta);text-align:left;hyphens:none}
+h2{font-size:21pt;font-weight:700;margin:0 0 6pt;padding-top:4pt;border-top:3pt solid var(--tinta);page-break-after:avoid;letter-spacing:-.005em}
+h3{font-size:14.5pt;font-weight:600;margin:16pt 0 4pt;page-break-after:avoid}
+p{margin:0 0 7pt;orphans:3;widows:3}
+ul,ol{margin:0 0 8pt 1.2em;padding:0}li{margin:0 0 3pt}
+.seccion{page-break-before:always}
+.seccion:first-of-type{page-break-before:auto}
+em{font-style:italic}
+code{font-family:Consolas,'Courier New',monospace;font-size:9.5pt;background:#E7ECF5;padding:0 2pt;border-radius:2pt}
+figure{margin:10pt 0 12pt;page-break-inside:avoid;text-align:center}
+figure img{max-width:100%;max-height:112mm;display:block;margin:0 auto}
+figcaption{font-family:'Fira Sans Condensed',Arial,sans-serif;font-size:10pt;color:var(--pizarra);text-align:left;margin-top:4pt;line-height:1.3}
+.doble{display:grid;grid-template-columns:1fr 1fr;gap:8mm;page-break-inside:avoid}
+.doble figure img{max-height:70mm}
+table{border-collapse:collapse;width:100%;margin:8pt 0 12pt;font-family:'Fira Sans Condensed','Arial Narrow',Arial,sans-serif;font-size:10.5pt;page-break-inside:avoid;text-align:left}
+th{background:var(--tinta);color:#fff;font-weight:600;padding:3pt 6pt;text-align:left}
+td{padding:2.5pt 6pt;border-bottom:.5pt solid var(--linea)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td code{word-break:break-all;font-size:8.5pt}
+tr.dest td{background:#FDECC8;font-weight:600}
+caption{caption-side:top;text-align:left;font-size:10pt;color:var(--pizarra);padding-bottom:3pt;font-weight:500}
+.nota{border-left:3pt solid var(--ambar);background:#FBF1DC;padding:6pt 10pt;margin:8pt 0 10pt;text-align:left;font-size:10.5pt}
+.cita{font-size:10.5pt;margin-left:1.2em;text-indent:-1.2em;margin-bottom:4pt;text-align:left}
+/* portada */
+.portada{height:297mm;background:var(--tinta);color:#E9EDF0;padding:26mm 22mm;position:relative;page-break-after:always;overflow:hidden;text-align:left}
+.portada .inst{font-family:'Fira Sans Condensed',Arial,sans-serif;font-size:14pt;color:#8FA3C2;letter-spacing:.01em}
+.portada svg{position:absolute;left:0;top:70mm;width:100%;height:60mm}
+.portada h1{font-family:'Fira Sans Condensed','Arial Narrow',Arial,sans-serif;color:#E9EDF0;font-size:50pt;line-height:.98;font-weight:700;margin:0;position:absolute;left:22mm;right:22mm;top:122mm;letter-spacing:-.01em;text-align:left}
+.portada .sub{position:absolute;left:22mm;right:30mm;top:180mm;font-size:14pt;color:#C3CEDF;line-height:1.4}
+.portada .equipo{position:absolute;left:22mm;bottom:30mm;font-family:'Fira Sans Condensed',Arial,sans-serif;font-size:13pt;line-height:1.55;color:#E9EDF0}
+.portada .fecha{position:absolute;right:22mm;bottom:30mm;font-family:'Fira Sans Condensed',Arial,sans-serif;font-size:13pt;color:#8FA3C2;text-align:right}
+/* indice */
+.indice{page-break-after:always}
+.indice ol{list-style:none;margin:0;font-family:'Fira Sans Condensed',Arial,sans-serif;font-size:14pt;line-height:1.9}
+.indice li span{color:var(--gris);display:inline-block;width:2.2em}
+.resumen{page-break-after:always}
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<section class="portada">
+  <div class="inst">Universidad EIA · Fundamentos de Inteligencia Artificial · 2026-2</div>
+  <svg viewBox="0 0 800 160" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="0" y1="45" x2="800" y2="45" stroke="#334155" stroke-width="1" stroke-dasharray="6 6"/>
+    <path d="M0 95 L20 93 L40 97 L60 92 L80 96 L100 90 L120 95 L140 89 L160 94 L180 88 L200 93 L220 87 L240 92 L260 86 L280 91 L300 85 L320 90 L340 84 L360 88 L380 82 L400 86 L420 80 L440 84 L460 78 L480 90 L500 100 L520 112 L540 102 L560 118 L580 108 L600 126 L620 114 L640 132 L660 120 L680 138 L700 126 L720 142 L740 130 L760 146 L780 134 L800 148" fill="none" stroke="#5B6B82" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M0 98 L20 96 L40 99 L60 95 L80 97 L100 93 L120 96 L140 92 L160 95 L180 91 L200 94 L220 90 L240 93 L260 89 L280 92 L300 88 L320 91 L340 87 L360 90 L380 86 L400 89 L420 85 L440 88 L460 84 L480 87 L500 83 L520 86 L540 82 L560 85 L580 81 L600 84 L620 80 L640 83 L660 79 L680 82 L700 78 L720 81 L740 77 L760 80 L780 76 L800 79" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  </svg>
+  <h1>Predicción de abandono de clientes de telecomunicaciones</h1>
+  <div class="sub">Clasificación de clientes con el conjunto Iranian Churn: comparación de 12 modelos con balanceo de clases, calibración de probabilidades, controles de fuga y aplicación web.</div>
+  <div class="equipo">Juan Jose Jaramillo Mora<br>Sebastian Giraldo Franco<br>Martin Restrepo<br>Miguel Angel Zuleta<br>Julian Mora<br>Santiago Zuluaga</div>
+  <div class="fecha">Informe final<br>10 de octubre de 2026</div>
+</section>
+
+<!-- RESUMEN -->
+<section class="resumen">
+  <h2>Resumen</h2>
+  <p>Este trabajo aborda la predicción del abandono de clientes de una empresa de telecomunicaciones a partir de nueve meses de uso del servicio. Usamos el conjunto <em>Iranian Churn</em> de UCI, con 3.150 clientes, de los cuales el 15,7 % abandonó en el mes doce. Es una clasificación binaria con desbalance moderado: un modelo que siempre responda «permanece» alcanza un accuracy de 84,4 % sin detectar ni un solo abandono. Por eso la métrica principal es el F1 de la clase que abandona.</p>
+  <p>El proceso se organizó en cinco cuadernos reproducibles y una aplicación web. Tras el análisis exploratorio y la limpieza (se conservaron las filas repetidas y los valores extremos, y se dejaron fuera <code>Status</code> y <code>Customer Value</code> por falta de documentación sobre su construcción), se separó una muestra de prueba del 20 % <strong>agrupando los perfiles idénticos</strong>, para que ningún cliente con las mismas entradas quedara repartido entre entrenamiento y prueba. Se decidió el escalador (<code>StandardScaler</code>, sin PCA ni selección de variables) y se compararon 12 clasificadores con 4 estrategias de balanceo (41 combinaciones) mediante validación cruzada estratificada por grupos.</p>
+  <p>El modelo final es un Random Forest con pesos de clase balanceados, probabilidades calibradas con una curva sigmoide y un umbral de decisión de 0,37. Con validación anidada (una estimación honesta de todo el procedimiento, no solo del modelo ya elegido) el F1 es de 0,851 ± 0,076; en la muestra de prueba, de 0,857, con 90 de 103 abandonos detectados y 17 falsas alarmas entre 536 clientes que permanecen. Un F1 tan alto exige desconfiar: un cuaderno adicional de controles de rigor comprobó que no hay filas duplicadas entre entrenamiento y prueba, que las etiquetas mezcladas al azar hunden el ROC AUC a 0,49 (descartando una fuga mecánica) y que, al agrupar clientes parecidos y no solo idénticos, el F1 baja a 0,811. Por eso leemos el resultado final como «entre 0,81 y 0,86», no como una cifra exacta, y concluimos que el modelo sirve para ordenar clientes por riesgo y priorizar contactos de retención, no como un sistema que dé certeza ni que prometa un ahorro.</p>
+  <p><strong>Palabras clave:</strong> abandono de clientes, telecomunicaciones, clasificación desbalanceada, F1, validación por grupos, calibración de probabilidades, scikit-learn.</p>
+</section>
+
+<!-- INDICE -->
+<section class="indice">
+  <h2>Contenido</h2>
+  <ol>
+    <li><span>1</span>Introducción</li>
+    <li><span>2</span>El conjunto de datos</li>
+    <li><span>3</span>Análisis exploratorio</li>
+    <li><span>4</span>Preprocesamiento y partición</li>
+    <li><span>5</span>Escalado, PCA y selección de variables</li>
+    <li><span>6</span>Balanceo de clases y comparación de modelos</li>
+    <li><span>7</span>Modelo final: ajuste, calibración, umbral y evaluación</li>
+    <li><span>8</span>Controles de rigor</li>
+    <li><span>9</span>Aplicación web</li>
+    <li><span>10</span>Conclusiones, limitaciones y trabajo futuro</li>
+    <li><span>11</span>Referencias</li>
+    <li><span>A</span>Anexo: reproducibilidad y estructura del repositorio</li>
+  </ol>
+</section>
+
+<!-- 1 -->
+<section class="seccion">
+  <h2>1. Introducción</h2>
+  <p>Retener a un cliente cuesta menos que conseguir uno nuevo, pero una empresa de telecomunicaciones no puede llamar a todos sus clientes para ofrecerles algo que los haga quedarse. Necesita saber a quién llamar primero. Si puede anticipar, con la información de los primeros nueve meses de la suscripción, quién va a abandonar en el mes doce, puede priorizar los contactos de retención hacia los clientes de mayor riesgo.</p>
+  <p>El objetivo de este trabajo es construir y evaluar un modelo de aprendizaje automático que, con el uso del servicio durante nueve meses, estime si un cliente abandonará en el mes doce. Tratamos el problema como una clasificación binaria supervisada, donde la clase 1 corresponde a un cliente que abandona y la clase 0 a uno que permanece.</p>
+  <p>El reto central es el desbalance de clases: solo el 15,7 % de los clientes abandona, de modo que un clasificador trivial que nunca avisa obtiene un accuracy de 84,4 %. A eso se suma un reto propio de este conjunto: contiene 300 filas repetidas exactamente y cientos de clientes con el mismo perfil de entrada (las mismas once variables) pero identificadores distintos, sin que el origen de esa repetición esté documentado. Por eso el trabajo se organiza alrededor de cuatro decisiones metodológicas:</p>
+  <ul>
+    <li>usar el <strong>F1 de la clase que abandona</strong> como métrica principal, acompañado de recall, precisión y ROC AUC, y relegar el accuracy a un papel de referencia;</li>
+    <li><strong>agrupar los perfiles idénticos</strong> al partir entrenamiento y prueba, y mantenerlos juntos también en la validación cruzada, para que un mismo perfil no aparezca a la vez en ambos lados;</li>
+    <li>aplicar el <strong>balanceo de clases dentro del <em>pipeline</em></strong> de validación cruzada, para que el remuestreo solo afecte a los datos de entrenamiento de cada partición;</li>
+    <li>dedicar un cuaderno completo a <strong>controles de rigor</strong> que pongan a prueba un resultado inusualmente alto, en lugar de aceptarlo sin más.</li>
+  </ul>
+  <p>El informe sigue el orden de los cinco cuadernos del proyecto (exploración y limpieza; escalado, PCA y selección de variables; balanceo y comparación de modelos; ajuste, calibración y evaluación final; controles de rigor) y describe además la aplicación web que publica el modelo. Todo el código, los datos derivados, los modelos y las figuras están en el repositorio del proyecto, y cada resultado numérico de este documento puede reproducirse ejecutando los cuadernos en orden.</p>
+</section>
+
+<!-- 2 -->
+<section class="seccion">
+  <h2>2. El conjunto de datos</h2>
+  <p>Usamos <em>Iranian Churn Dataset</em>, publicado en el repositorio de aprendizaje automático de UCI (identificador 563, licencia CC BY 4.0). Los datos provienen de una empresa de telecomunicaciones iraní y resumen, para cada cliente, el uso del servicio durante nueve meses junto con si abandonó o permaneció en el mes doce. El archivo original tiene 3.150 filas y 14 columnas (13 variables más la respuesta), sin valores faltantes.</p>
+  <p>De esas 14 columnas usamos <strong>once como entrada</strong>. Dejamos fuera <code>Status</code> y <code>Customer Value</code> porque el conjunto no documenta con precisión cuándo se miden ni cómo se calculan, y no pudimos descartar que ya reflejaran el desenlace; no las reintrodujimos en ningún momento del proyecto para mejorar el resultado.</p>
+  <table>
+    <caption>Tabla 1. Variables usadas como entrada del modelo.</caption>
+    <thead><tr><th>Variable</th><th>Descripción</th><th>Tipo</th></tr></thead>
+    <tbody>
+      <tr><td><code>fallas_llamadas</code></td><td>Llamadas fallidas</td><td>Numérica (conteo)</td></tr>
+      <tr><td><code>quejas</code></td><td>0 sin queja; 1 con queja (no cuenta cuántas)</td><td>Binaria</td></tr>
+      <tr><td><code>antiguedad</code></td><td>Meses de suscripción</td><td>Numérica</td></tr>
+      <tr><td><code>nivel_cargo</code></td><td>Nivel de cargo documentado de 0 a 9 (hay 7 clientes en nivel 10)</td><td>Ordinal</td></tr>
+      <tr><td><code>segundos_uso</code></td><td>Segundos de llamadas</td><td>Numérica</td></tr>
+      <tr><td><code>frecuencia_uso</code></td><td>Número de llamadas</td><td>Numérica (conteo)</td></tr>
+      <tr><td><code>frecuencia_sms</code></td><td>Número de mensajes</td><td>Numérica (conteo)</td></tr>
+      <tr><td><code>numeros_distintos</code></td><td>Números distintos llamados</td><td>Numérica (conteo)</td></tr>
+      <tr><td><code>grupo_edad</code></td><td>Grupo de edad, de 1 a 5</td><td>Ordinal</td></tr>
+      <tr><td><code>plan_tarifario</code></td><td>1 pago por uso; 2 contractual</td><td>Nominal binaria</td></tr>
+      <tr><td><code>edad</code></td><td>Edad (función exacta del grupo: 1→15, 2→25, 3→30, 4→45, 5→55)</td><td>Numérica</td></tr>
+      <tr><td><code>abandono</code></td><td>1 si el cliente abandonó en el mes doce; 0 si permaneció</td><td>Objetivo</td></tr>
+    </tbody>
+  </table>
+  <p>La clase objetivo está desbalanceada, aunque menos que en problemas típicos de abandono: 2.655 clientes permanecieron y 495 abandonaron, es decir, 84,29 % frente a 15,71 %. Encontramos además 300 filas repetidas exactamente (idénticas en las 14 columnas), que conservamos porque no existe un identificador que permita decidir si son errores de captura o clientes distintos con la misma huella. Esa decisión obliga a tratar con cuidado la partición de datos, como se explica en la sección 4.</p>
+  <figure>
+    <img src="../figuras/01_distribucion_clase.png" alt="Distribución de la clase" style="max-height:52mm">
+    <figcaption>Figura 1. Distribución de la clase en el conjunto completo (3.150 clientes): 84,29 % permanece y 15,71 % abandona.</figcaption>
+  </figure>
+</section>
+
+<!-- 3 -->
+<section style="margin-top:14pt">
+  <h2>3. Análisis exploratorio</h2>
+  <h3>3.1 Quejas: la señal más fuerte</h3>
+  <p>De los 195 clientes que presentaron una queja, el 83,08 % abandonó; de los 2.316 que no se quejaron, solo el 9,93 %. Es, con diferencia, la variable más asociada al abandono. En el plan de pago por uso (plan 1) el abandono fue del 16,72 %, frente a 2,09 % en el plan contractual (plan 2). Las categorías de nivel de cargo de 5 a 10 tienen entre 7 y 25 registros cada una y ningún abandono observado en esos grupos, lo que no demuestra que su riesgo real sea cero: son muestras pequeñas.</p>
+  <figure>
+    <img src="../figuras/01_categorica_quejas.png" alt="Abandono según quejas" style="max-height:60mm">
+    <figcaption>Figura 2. Porcentaje de abandono según si el cliente presentó una queja.</figcaption>
+  </figure>
+  <h3>3.2 Variables numéricas</h3>
+  <p>Las variables de uso están concentradas en valores bajos con colas hacia valores altos: en segundos de uso la media es 4.509 y la mediana 3.020; en frecuencia de SMS la media es 72 y la mediana 21. Al comparar por clase, el abandono se asocia con menor uso: la mediana de segundos de uso es 1.235,5 entre quienes abandonan frente a 3.603 entre quienes permanecen, y la de frecuencia de uso es 25 frente a 63. Conservamos los valores extremos, porque aparecer lejos del resto no demuestra por sí solo que sean errores.</p>
+  <figure>
+    <img src="../figuras/01_boxplots_por_clase.png" alt="Diagramas de caja por clase">
+    <figcaption>Figura 3. Diagramas de caja de las variables numéricas según la clase (entrenamiento).</figcaption>
+  </figure>
+  <h3>3.3 Correlación con el abandono</h3>
+  <p>Medimos la relación entre variables con el coeficiente phik (Baak et al., 2020), que se define tanto para variables numéricas como categóricas. Las mayores asociaciones con el abandono son <code>quejas</code> (0,747), <code>segundos_uso</code> (0,464) y <code>frecuencia_uso</code> (0,435); <code>fallas_llamadas</code> obtiene 0,000 con esta medida univariada, lo que no demuestra que sea inútil en combinación con otras variables. Es, en conjunto, bastante más señal que la que encontramos en el problema de sismos del mismo equipo, donde ninguna variable superaba 0,35.</p>
+  <figure>
+    <img src="../figuras/01_correlacion_phik.png" alt="Matriz de correlación phik" style="max-height:100mm">
+    <figcaption>Figura 4. Matriz de correlación phik de las once variables de entrada y el abandono (entrenamiento).</figcaption>
+  </figure>
+  <h3>3.4 Edad y grupo de edad</h3>
+  <p>Revisamos si <code>edad</code> y <code>grupo_edad</code> representan la misma información. En entrenamiento solo aparecen cinco parejas: 15↔1, 25↔2, 30↔3, 45↔4 y 55↔5, cada edad corresponde a un único grupo y viceversa. Conservamos ambas variables como entrada y dejamos documentada la redundancia; <code>edad</code> no debe leerse como una edad exacta, sino como una codificación numérica del grupo.</p>
+</section>
+
+<!-- 4 -->
+<section class="seccion">
+  <h2>4. Preprocesamiento y partición</h2>
+  <h3>4.1 Limpieza</h3>
+  <p>Conservamos las 3.150 filas originales, las 300 repeticiones exactas, los valores extremos y los 7 registros de nivel de cargo 10: ninguna de esas decisiones estaba respaldada por evidencia de que fueran errores. Pusimos nombres sencillos a las columnas y dejamos <code>Status</code> y <code>Customer Value</code> fuera del conjunto de entrada, como se explicó en la sección 2. Los códigos de categorías (plan tarifario, nivel de cargo, grupo de edad) ya venían como números en el archivo original y se conservaron así, sin aplicar ninguna codificación aprendida: el conjunto quedó con 3.150 filas y once entradas más la respuesta.</p>
+  <h3>4.2 Agrupar perfiles antes de partir</h3>
+  <p>Con 300 filas repetidas exactamente y muchas más que comparten las once entradas con identificadores distintos, partir al azar habría dejado el mismo perfil de cliente en entrenamiento y en prueba, lo que infla artificialmente el resultado: el modelo no estaría generalizando, solo recordando. Por eso <strong>agrupamos las filas que comparten las mismas once entradas (sin incluir la respuesta)</strong> y repartimos esos grupos completos entre entrenamiento y prueba, usando la primera de cinco particiones estratificadas por grupos con semilla 42.</p>
+  <p>La partición reservó 2.511 filas de entrenamiento (79,71 %, 392 abandonos, 15,61 %) y 639 de prueba (20,29 %, 103 abandonos, 16,12 %). No hay perfiles compartidos entre ambas muestras. El mismo criterio de agrupación se mantuvo dentro de la validación cruzada de los cuadernos siguientes, de modo que ningún grupo cruzara entrenamiento y validación en ninguna partición.</p>
+  <div class="nota">Esta decisión es la razón principal por la que este proyecto no reutiliza las reglas de partición del proyecto hermano de sismos: allí cada fila es un turno sin duplicados relevantes; aquí perfiles repetidos son la norma y agruparlos es indispensable para una evaluación honesta.</div>
+</section>
+
+<!-- 5 -->
+<section class="seccion">
+  <h2>5. Escalado, PCA y selección de variables</h2>
+  <p>Esta etapa se hizo únicamente con las 2.511 filas de entrenamiento. Para comparar alternativas se usó siempre el mismo modelo de referencia, una regresión logística con <code>class_weight="balanced"</code>, y diez particiones de validación cruzada <strong>por grupos</strong> (los mismos grupos de perfiles de la sección 4), de modo que ningún grupo apareciera a la vez en entrenamiento y en validación dentro de cada partición. Todo lo que aprende de los datos (escaladores, PCA y selección) se colocó dentro del <em>pipeline</em>.</p>
+  <h3>5.1 Escalado</h3>
+  <p>Se compararon tres opciones: sin escalar, <code>StandardScaler</code> y <code>MinMaxScaler</code>. <code>StandardScaler</code> obtuvo el mayor F1 promedio (0,597), seguido de cerca por no escalar (0,595) y por <code>MinMaxScaler</code> (0,592). La ventaja es pequeña frente a la desviación entre particiones (alrededor de 0,06), pero se eligió <strong>StandardScaler</strong> siguiendo la regla de mayor F1 promedio, sin afirmar una superioridad concluyente.</p>
+  <table>
+    <caption>Tabla 2. F1 de la clase que abandona en validación cruzada por grupos, según el escalador.</caption>
+    <thead><tr><th>Escalador</th><th class="n">F1</th><th class="n">Desv.</th><th class="n">Precisión</th><th class="n">Recall</th></tr></thead>
+    <tbody>
+      <tr><td>Sin escalar</td><td class="n">0,595</td><td class="n">0,067</td><td class="n">0,450</td><td class="n">0,886</td></tr>
+      <tr class="dest"><td>StandardScaler</td><td class="n">0,597</td><td class="n">0,063</td><td class="n">0,454</td><td class="n">0,880</td></tr>
+      <tr><td>MinMaxScaler</td><td class="n">0,592</td><td class="n">0,065</td><td class="n">0,452</td><td class="n">0,870</td></tr>
+    </tbody>
+  </table>
+  <h3>5.2 Análisis de componentes principales</h3>
+  <p>Con <code>StandardScaler</code>, hacen falta 7 componentes para explicar el 90 % de la varianza y 8 para el 95 %, de un total de 11 variables. PCA no mejoró el resultado: el F1 fue 0,597 sin reducción, 0,573 con PCA al 90 % y 0,572 con PCA al 95 %. Decidimos <strong>no usar PCA</strong>, tanto por el resultado como para conservar la interpretación de las variables, importante cuando el objetivo es priorizar a qué clientes contactar.</p>
+  <figure>
+    <img src="../figuras/02_pca_varianza.png" alt="Varianza explicada acumulada" style="max-height:75mm">
+    <figcaption>Figura 5. Varianza explicada acumulada por componente (ajuste descriptivo con entrenamiento completo).</figcaption>
+  </figure>
+  <h3>5.3 Selección de variables</h3>
+  <p>Probamos <code>SelectKBest</code> con ANOVA (<code>f_classif</code>), conservando de 1 a 10 variables de las once. El mejor subconjunto (10 variables) obtuvo un F1 de 0,573, por debajo del 0,597 de usar las once sin selección. La opción de una sola variable alcanzó una precisión de 0,834 pero un recall de apenas 0,413: sus alertas son más confiables, pero deja sin detectar a muchos clientes que sí abandonan. Como ningún subconjunto superó al conjunto completo, se conservaron las <strong>once entradas, sin selección</strong>.</p>
+  <figure>
+    <img src="../figuras/02_comparacion_rasgos.png" alt="Comparación de alternativas de preparación" style="max-height:95mm">
+    <figcaption>Figura 6. F1 promedio de las 15 alternativas comparadas (sin reducción, PCA y selección ANOVA).</figcaption>
+  </figure>
+  <p>La preparación elegida para los cuadernos siguientes es, entonces, <strong>StandardScaler, sin PCA y sin selección de variables</strong>, con un F1 de referencia de 0,597 ± 0,063 (recall 0,880, precisión 0,454). Es una comparación de desarrollo con un modelo lineal de referencia, no la evaluación final, y no garantiza que esta preparación sea la mejor para todos los modelos del siguiente cuaderno.</p>
+  <div class="nota">Simplificación reconocida: dentro de la regresión logística de referencia, nivel de cargo y grupo de edad se tratan como variables numéricas con un efecto lineal en sus niveles, lo cual es una simplificación de su carácter ordinal.</div>
+</section>
+
+<!-- 6 -->
+<section class="seccion">
+  <h2>6. Balanceo de clases y comparación de modelos</h2>
+  <p>Se compararon los 12 clasificadores vistos en el curso, ocho individuales (KNN, Naive Bayes, árbol de decisión, regresión logística, SVM, SVM lineal, red neuronal MLP y Random Forest) y cuatro ensambles (Bagging, AdaBoost, Gradient Boosting y Stacking), con cuatro estrategias de balanceo: sin balanceo, <code>class_weight="balanced"</code>, SMOTENC (una variante de SMOTE para variables mixtas; Chawla et al., 2002) y submuestreo aleatorio. La estrategia <code>class_weight</code> solo existe en cinco modelos, de modo que se evaluaron 12 × 3 + 5 = <strong>41 combinaciones</strong>, todas con validación cruzada por grupos y el escalador y el balanceo dentro de un <em>pipeline</em> de imbalanced-learn (Lemaître et al., 2017).</p>
+  <h3>6.1 Las 41 combinaciones</h3>
+  <p>Los modelos basados en árboles dominan. Stacking con SMOTENC obtuvo el mayor F1 (0,862), seguido de Random Forest con <code>class_weight</code> (0,858) y la red neuronal sin balancear (0,838). Los modelos lineales quedan muy por debajo: la regresión logística no supera 0,60 en ninguna estrategia, y la SVM lineal tampoco. La diferencia frente al problema de sismos del equipo (donde los modelos lineales eran los mejores) es notable y se explica en la sección 6.2.</p>
+  <figure>
+    <img src="../figuras/03_heatmap_f1_modelo_estrategia.png" alt="Mapa de calor de F1" style="max-height:100mm">
+    <figcaption>Figura 7. F1 de la clase que abandona para las 41 combinaciones (validación cruzada por grupos). Las celdas vacías son combinaciones que no existen.</figcaption>
+  </figure>
+  <table>
+    <caption>Tabla 3. Los tres candidatos que pasaron al ajuste (uno por familia de modelo).</caption>
+    <thead><tr><th>Modelo</th><th>Estrategia</th><th class="n">F1</th><th class="n">Desv.</th><th class="n">Recall</th><th class="n">Precisión</th><th class="n">ROC AUC</th></tr></thead>
+    <tbody>
+      <tr class="dest"><td>Stacking</td><td>SMOTENC</td><td class="n">0,862</td><td class="n">0,051</td><td class="n">0,895</td><td class="n">0,834</td><td class="n">0,981</td></tr>
+      <tr class="dest"><td>Random Forest</td><td><code>class_weight</code></td><td class="n">0,858</td><td class="n">0,047</td><td class="n">0,898</td><td class="n">0,826</td><td class="n">0,982</td></tr>
+      <tr class="dest"><td>Red neuronal (MLP)</td><td>Sin balanceo</td><td class="n">0,838</td><td class="n">0,032</td><td class="n">0,832</td><td class="n">0,847</td><td class="n">0,983</td></tr>
+    </tbody>
+  </table>
+  <p>Stacking y Random Forest están a solo 0,0036 de F1 de distancia, dentro del ruido de la validación cruzada: es un empate práctico. La red neuronal rinde bien incluso sin balancear sus datos de entrenamiento. Pasaron al ajuste las tres mejores combinaciones de familias de modelo distintas (filas resaltadas).</p>
+  <h3>6.2 Por qué los árboles ganan aquí y los modelos lineales ganan en sismos</h3>
+  <p>La señal del abandono está en combinaciones de variables, no en variables aisladas: entre quienes se quejaron y además usaron poco el servicio, el abandono llega a cerca del 90-100 % según el cruce exacto, mientras que entre quienes no se quejaron y usaron mucho el servicio baja a 2 %. Un modelo lineal como la regresión logística suma el efecto de cada variable por separado y no puede expresar directamente «quejó y usó poco»; un árbol de decisión sí, porque puede partir primero por quejas y luego por uso. Revisamos si esta ventaja de los árboles podía deberse a una fuga entre particiones y no encontramos evidencia (sección 8).</p>
+  <h3>6.3 La trampa del accuracy</h3>
+  <p>Sin balancear, varios modelos rondan el 93-95 % de accuracy casi sin detectar abandonos, muy cerca del 84,4 % de responder siempre «permanece» (que tiene F1 de 0). Guiarse por el accuracy habría llevado, igual que en el problema de sismos del equipo, a preferir justo los modelos menos útiles.</p>
+  <figure>
+    <img src="../figuras/03_accuracy_vs_f1.png" alt="Accuracy contra F1" style="max-height:90mm">
+    <figcaption>Figura 8. Accuracy contra F1 en las 41 combinaciones; la línea punteada es el accuracy de un modelo que siempre responde «permanece».</figcaption>
+  </figure>
+</section>
+
+<!-- 7 -->
+<section class="seccion">
+  <h2>7. Modelo final: ajuste, calibración, umbral y evaluación</h2>
+  <h3>7.1 Ajuste de hiperparámetros</h3>
+  <p>Los hiperparámetros de los tres candidatos se buscaron con <code>GridSearchCV</code> usando la precisión promedio (<em>average precision</em>), que mide qué tan bien ordena el modelo a los clientes por riesgo y no depende de un umbral fijo. Las probabilidades se calibraron después con una curva sigmoide (Platt, 1999) ajustada sobre predicciones fuera de pliegue, y el umbral se eligió por separado maximizando el F1 sobre esas mismas probabilidades calibradas de entrenamiento.</p>
+  <h3>7.2 Estimación anidada del rendimiento</h3>
+  <p>Para saber cuánto F1 cabe esperar de <strong>todo el procedimiento</strong> (búsqueda de hiperparámetros, calibración y umbral), y no solo del modelo ya elegido con esos mismos datos, se repitió el procedimiento completo dentro de una validación anidada por grupos: 5 particiones externas y 5 internas, siempre respetando los grupos de perfiles. Cada medición final se hizo sobre filas que ni los hiperparámetros, ni la calibración, ni el umbral habían visto.</p>
+  <table>
+    <caption>Tabla 4. Estimación anidada de los tres candidatos (entrenamiento, sin tocar prueba).</caption>
+    <thead><tr><th>Modelo</th><th>Estrategia</th><th class="n">F1 anidado</th><th class="n">F1 con selección</th><th class="n">Umbral</th><th class="n">Recall</th><th class="n">Precisión</th></tr></thead>
+    <tbody>
+      <tr><td>Stacking</td><td>SMOTENC</td><td class="n">0,849</td><td class="n">0,860</td><td class="n">0,34</td><td class="n">0,895</td><td class="n">0,828</td></tr>
+      <tr class="dest"><td>Random Forest</td><td><code>class_weight</code></td><td class="n">0,851</td><td class="n">0,860</td><td class="n">0,37</td><td class="n">0,890</td><td class="n">0,831</td></tr>
+      <tr><td>Red neuronal (MLP)</td><td>Sin balanceo</td><td class="n">0,839</td><td class="n">0,859</td><td class="n">0,35</td><td class="n">0,913</td><td class="n">0,810</td></tr>
+    </tbody>
+  </table>
+  <p>El F1 anidado (0,839 a 0,851) queda por debajo del F1 «con selección» (0,859 a 0,860), que es el que se obtiene al repetir el procedimiento con todo el entrenamiento y medir sobre las mismas filas con las que se eligieron hiperparámetros y umbral: esa diferencia, de 0,009 a 0,020, es el optimismo de no separar la elección de la medición. Random Forest tiene el mayor F1 anidado, pero supera a Stacking por apenas 0,0024 (0,03 desviaciones): un empate práctico. Se escogió <strong>Random Forest con <code>class_weight</code></strong> por la regla de mayor F1 anidado, con el argumento adicional de ser el más rápido de entrenar.</p>
+  <h3>7.3 Modelo final, umbral y calibración</h3>
+  <p>El modelo final es un <strong>Random Forest</strong> (400 árboles, profundidad máxima 15, hojas mínimas de 1) con pesos de clase balanceados, escalado con <code>StandardScaler</code>, probabilidades calibradas con una curva sigmoide y umbral de <strong>0,37</strong>, todo ajustado con las 2.511 filas de entrenamiento y las diez particiones por grupos. Con ese umbral, en entrenamiento el F1 es 0,860, el recall 0,890 y la precisión 0,831. La curva es plana alrededor del óptimo: los ocho mejores umbrales, entre 0,28 y 0,40, dan un F1 de entre 0,857 y 0,860, así que el valor exacto no es crítico. Bajar el umbral hacia 0,28 sube el recall a 0,931 casi sin perder F1 (0,858), a costa de la precisión (0,795): es una decisión de negocio, según cuánto cueste contactar a un cliente que de todas formas iba a quedarse frente a perder uno que iba a irse.</p>
+  <div class="doble">
+    <figure><img src="../figuras/04_f1_recall_precision_vs_umbral.png" alt="Métricas contra umbral"><figcaption>Figura 9. F1, recall y precisión según el umbral (validación cruzada sobre entrenamiento).</figcaption></figure>
+    <figure><img src="../figuras/04_curva_calibracion_cv.png" alt="Curva de calibración"><figcaption>Figura 10. Curva de calibración en validación cruzada por grupos.</figcaption></figure>
+  </div>
+  <p>Las probabilidades calibradas de entrenamiento tienen una media de 0,156, prácticamente igual a la proporción real de abandono (0,1561): en promedio, el modelo está bien calibrado.</p>
+  <h3>7.4 Evaluación en la muestra de prueba</h3>
+  <p>El modelo final, con el calibrador y el umbral ya congelados, se evaluó una sola vez en los 639 clientes de prueba (103 abandonos). <strong>Detectó 90 de los 103 abandonos</strong> (recall de 0,874) y dejó pasar 13. Dio 17 falsas alarmas entre los 536 clientes que permanecen (3,2 %), de modo que de sus 107 alertas 90 fueron ciertas (precisión de 0,841). El accuracy fue 0,953, frente a 0,839 de responder siempre «permanece», que no detecta ningún abandono.</p>
+  <table>
+    <caption>Tabla 5. Métricas del modelo final: estimación anidada de entrenamiento y prueba.</caption>
+    <thead><tr><th>Métrica (clase que abandona)</th><th class="n">Validación anidada</th><th class="n">Prueba</th></tr></thead>
+    <tbody>
+      <tr class="dest"><td>F1</td><td class="n">0,851 ± 0,076</td><td class="n">0,857</td></tr>
+      <tr><td>Recall</td><td class="n">0,890</td><td class="n">0,874</td></tr>
+      <tr><td>Precisión</td><td class="n">0,831</td><td class="n">0,841</td></tr>
+      <tr><td>ROC AUC</td><td class="n">0,982</td><td class="n">0,982</td></tr>
+      <tr><td>Precisión promedio</td><td class="n">0,900</td><td class="n">0,933</td></tr>
+      <tr><td>Brier</td><td class="n">0,037</td><td class="n">0,035</td></tr>
+      <tr><td>Accuracy</td><td class="n">—</td><td class="n">0,953</td></tr>
+    </tbody>
+  </table>
+  <p>El 0,857 de prueba cae dentro del rango de la estimación anidada (0,851 ± 0,076): no hay señal de que el resultado en prueba sea un golpe de suerte respecto a lo que el procedimiento ya anticipaba con solo entrenamiento. Como la prueba tiene relativamente pocos abandonos (103), calculamos también un intervalo del 95 % por <strong>bootstrap de grupos</strong>: remuestreamos 1.000 veces los 571 perfiles distintos de prueba (no filas sueltas) y recalculamos las métricas. El intervalo del F1 va de 0,800 a 0,914, el del recall de 0,800 a 0,933 y el de la precisión de 0,757 a 0,929: el 0,857 es nuestra mejor estimación puntual, no una cifra exacta.</p>
+  <div class="doble">
+    <figure><img src="../figuras/04_matriz_confusion_test.png" alt="Matriz de confusión"><figcaption>Figura 11. Matriz de confusión en la muestra de prueba (umbral 0,37).</figcaption></figure>
+    <figure><img src="../figuras/04_curva_roc_test.png" alt="Curva ROC"><figcaption>Figura 12. Curva ROC en la muestra de prueba (AUC 0,982).</figcaption></figure>
+  </div>
+  <h3>7.5 Priorizar contactos</h3>
+  <p>Para el uso previsto (decidir a quién llamar primero) importa más el orden por riesgo que el umbral exacto. Contactando solo al 10 % de los clientes de prueba con mayor probabilidad (64 clientes), el 95 % de verdad abandonaba (precisión) y se cubría el 59 % de los abandonos totales (recall), 5,9 veces más que contactar al azar. Contactando al 20 % (128 clientes) se cubre el 94 % de los abandonos con una precisión de 76 %.</p>
+</section>
+
+<!-- 8 -->
+<section class="seccion">
+  <h2>8. Controles de rigor</h2>
+  <p>Un F1 de 0,857, muy por encima del 0,59 que obtenía un modelo lineal con las mismas variables (sección 6), exige desconfiar antes de aceptarlo. Dedicamos un quinto cuaderno a ponerlo a prueba con cinco controles independientes, todos ejecutados sin tocar de nuevo la decisión del modelo final.</p>
+  <h3>8.1 Integridad de la partición</h3>
+  <p>Comprobamos que los archivos <code>train.csv</code> y <code>test.csv</code> coinciden exactamente con los que generó el notebook 01 (mismas filas, mismo orden, mismos valores) y que ningún perfil de las once entradas aparece a la vez en entrenamiento y en prueba: de los 571 perfiles distintos de prueba, cero coinciden con alguno de los 2.344 perfiles distintos de entrenamiento.</p>
+  <h3>8.2 Etiquetas mezcladas al azar</h3>
+  <p>Si existiera una fuga mecánica entre las entradas y la respuesta, un modelo seguiría acertando incluso con etiquetas mezcladas al azar. Entrenamos el mismo procedimiento con las etiquetas de entrenamiento permutadas: el ROC AUC cayó de 0,982 (etiquetas reales) a 0,492 (etiquetas mezcladas, prácticamente el 0,5 del azar) y el F1 a umbral 0,5 cayó de 0,859 a 0,147. El modelo no tiene ningún atajo que le permita acertar sin que la relación entre entradas y abandono sea real.</p>
+  <h3>8.3 Agrupar perfiles parecidos, no solo idénticos</h3>
+  <p>El control más exigente: en vez de agrupar solo las filas con las once entradas exactamente iguales, agrupamos por rangos más gruesos de las variables numéricas (una agrupación más estricta, con 1.299 grupos en vez de los 2.255 originales), de modo que clientes parecidos pero no idénticos también queden del mismo lado de la partición. Con esta agrupación más dura el F1 bajó de 0,859 a 0,811, el ROC AUC de 0,982 a 0,972 y la precisión promedio de 0,891 a 0,843. El resultado sigue siendo alto, pero confirma que una parte de él (unos 0,05 de F1) depende de que haya clientes muy parecidos en ambos lados de la partición original.</p>
+  <table>
+    <caption>Tabla 6. Controles de rigor: etiquetas mezcladas y agrupación más estricta.</caption>
+    <thead><tr><th>Control</th><th class="n">ROC AUC</th><th class="n">F1 (umbral 0,5)</th><th class="n">Grupos</th></tr></thead>
+    <tbody>
+      <tr class="dest"><td>Etiquetas reales (el proyecto)</td><td class="n">0,982</td><td class="n">0,859</td><td class="n">2.255</td></tr>
+      <tr><td>Etiquetas mezcladas al azar</td><td class="n">0,492</td><td class="n">0,147</td><td class="n">2.255</td></tr>
+      <tr class="dest"><td>Agrupación más estricta</td><td class="n">0,972</td><td class="n">0,811</td><td class="n">1.299</td></tr>
+    </tbody>
+  </table>
+  <h3>8.4 Vecinos más cercanos y duplicados tras balanceo</h3>
+  <p>Revisamos si los vecinos muy cercanos de cada fila de entrenamiento comparten etiqueta más de lo esperable, lo que delataría una fuga entre particiones: con una distancia máxima de 0,5 (en variables normalizadas), el 93,05 % de los vecinos más cercanos comparte etiqueta, un porcentaje que sube suavemente a medida que se relaja la distancia (81,8 % a distancia 0,05) y no muestra el salto abrupto que señalaría duplicados ocultos entre entrenamiento y validación. También comprobamos que SMOTE y SMOTENC generan clientes sintéticos con valores plausibles de <code>quejas</code> y <code>plan_tarifario</code> (combinaciones ya existentes en los datos reales), no copias ni valores imposibles.</p>
+  <h3>8.5 Conclusión de los controles</h3>
+  <p>Ningún control encontró evidencia de una fuga mecánica (duplicados entre particiones, atajo por etiquetas, vecinos sospechosos). Sí confirmamos que el resultado es sensible a qué tan parecidos pueden estar los clientes de ambos lados de la partición. Por eso, en las conclusiones de este informe, el F1 final se reporta como un rango (0,81 a 0,86) y no como la cifra puntual de 0,857.</p>
+</section>
+
+<!-- 9 -->
+<section class="seccion">
+  <h2>9. Aplicación web</h2>
+  <p>El modelo se publicó en una aplicación construida con Gradio (Abid et al., 2019), que carga el modelo exportado por el cuarto cuaderno, la metadata y los clientes reales de la muestra de prueba. Se ejecuta en local con <code>uv run python app.py</code> y está preparada para ejecutarse en Google Colab. Tiene tres pestañas:</p>
+  <ul>
+    <li><strong>Evaluar un cliente.</strong> Un formulario con las once entradas del modelo, cada una con su descripción. Muestra el riesgo estimado en porcentaje, un veredicto según el umbral de 0,37 y los factores que más empujan el riesgo de ese cliente en concreto (comparando cada entrada contra la mediana de entrenamiento). Botones de ejemplo cargan un cliente tranquilo, uno justo en el límite del umbral, uno en riesgo alto o uno real al azar de la muestra de prueba, mostrando en ese último caso qué ocurrió de verdad.</li>
+    <li><strong>Priorizar contactos.</strong> Recibe un archivo CSV con un cliente por fila (en español o con los nombres originales en inglés del conjunto de UCI) y devuelve una tabla ordenada por riesgo, con un resumen y un archivo descargable para priorizar las llamadas de retención.</li>
+    <li><strong>Sobre el modelo.</strong> Muestra el modelo, la estrategia de balanceo, la calibración, el escalador, las entradas, el umbral, las métricas de validación anidada y de prueba, la fecha de entrenamiento y una nota sobre cómo leer los resultados, incluida la advertencia del rango 0,81-0,86 de la sección 8.</li>
+  </ul>
+  <p>La aplicación incluye un aviso visible de que es un proyecto académico, que no estima si una oferta concreta evitará el abandono ni cuánto ahorraría hacerlo, y que no reemplaza el criterio del equipo de retención. Se probó que la probabilidad calculada por la aplicación coincide con la del cuaderno final en los 639 clientes de prueba, que un campo vacío o un valor negativo produce un mensaje de error claro, que un CSV con una columna faltante indica cuál falta, y que las métricas de la pestaña «Sobre el modelo» coinciden con la metadata exportada. La prueba en Google Colab queda pendiente de realizarse.</p>
+</section>
+
+<!-- 10 -->
+<section class="seccion">
+  <h2>10. Conclusiones, limitaciones y trabajo futuro</h2>
+  <h3>10.1 Conclusiones</h3>
+  <ul>
+    <li><strong>El desbalance y los perfiles repetidos definen el problema.</strong> Con 15,7 % de abandono y perfiles idénticos repetidos cientos de veces, tanto el accuracy como una partición que no agrupe perfiles engañan. La métrica principal es el F1 de la clase que abandona y la partición se hizo agrupando perfiles.</li>
+    <li><strong>La señal es fuerte y no es lineal.</strong> Con phik de 0,747, las quejas son, por lejos, la variable más asociada al abandono, seguida del uso del servicio. La señal está en combinaciones de variables (quejas y poco uso a la vez), por lo que los árboles y los ensambles superan ampliamente a los modelos lineales (0,86 frente a 0,57-0,60 de F1).</li>
+    <li><strong>El modelo final es útil para priorizar contactos.</strong> Random Forest con pesos balanceados, calibrado, detecta 90 de 103 abandonos de la muestra de prueba con solo 17 falsas alarmas entre 536 clientes que permanecen, y contactando al 10 % de mayor riesgo se cubre el 59 % de los abandonos con 95 % de precisión.</li>
+    <li><strong>Un resultado alto exige controles, y los superó en lo esencial.</strong> Las etiquetas mezcladas hunden el ROC AUC a 0,49 y no hay duplicados entre particiones: no hay fuga mecánica. Pero agrupar clientes parecidos y no solo idénticos baja el F1 de 0,859 a 0,811, así que reportamos el resultado como un rango, entre 0,81 y 0,86, y no como una cifra exacta.</li>
+  </ul>
+  <h3>10.2 Limitaciones</h3>
+  <ul>
+    <li><strong>Sin fechas.</strong> El conjunto no trae fechas ni el momento exacto de cada medición, de modo que no se puede descartar que alguna entrada (por ejemplo, el uso igual a cero) ya refleje un abandono que ya había ocurrido.</li>
+    <li><strong>Dependencia de perfiles parecidos.</strong> El control de agrupación estricta (sección 8.3) muestra que parte del F1 depende de que clientes muy parecidos puedan quedar en ambos lados de la partición.</li>
+    <li><strong>Variables excluidas por trazabilidad, no por evidencia de fuga.</strong> <code>Status</code> y <code>Customer Value</code> se dejaron fuera por falta de documentación, no porque se haya demostrado que filtran el desenlace; tampoco se reintrodujeron para mejorar el resultado.</li>
+    <li><strong>Datos de una sola empresa.</strong> No sabemos cómo se comportaría el modelo en otro periodo, otro mercado o con otra definición de abandono.</li>
+    <li><strong>El umbral es una decisión de negocio.</strong> El 0,37 maximiza el F1, pero el umbral adecuado depende de cuánto cueste contactar a un cliente frente a perderlo; no lo estimamos en este trabajo.</li>
+    <li><strong>No estimamos el efecto de una intervención.</strong> El modelo ordena a los clientes por riesgo de abandono, no estima si una oferta de retención cambiaría ese riesgo ni cuánto ahorraría.</li>
+  </ul>
+  <h3>10.3 Trabajo futuro</h3>
+  <ul>
+    <li>Conseguir datos con fecha para validar con una partición temporal y descartar por completo que alguna entrada refleje el desenlace.</li>
+    <li>Revisar <code>Status</code> y <code>Customer Value</code> con su definición oficial, para decidir con evidencia si pueden usarse.</li>
+    <li>Costos asimétricos entre contactar de más y perder un cliente, y selección del umbral a partir de esos costos.</li>
+    <li>Un diseño experimental (A/B) que mida si contactar a los clientes de mayor riesgo reduce el abandono real.</li>
+    <li>Datos de otra empresa o periodo, y despliegue permanente de la aplicación.</li>
+  </ul>
+</section>
+
+<!-- 11 -->
+<section>
+  <h2>11. Referencias</h2>
+  <p class="cita">Abid, A., Abdalla, A., Abid, A., Khan, D., Alfozan, A. y Zou, J. (2019). Gradio: Hassle-free sharing and testing of ML models in the wild. <em>arXiv:1906.02569</em>.</p>
+  <p class="cita">Baak, M., Koopman, R., Snoek, H. y Klous, S. (2020). A new correlation coefficient between categorical, ordinal and interval variables with Pearson characteristics. <em>Computational Statistics &amp; Data Analysis, 152</em>, 107043.</p>
+  <p class="cita">Chawla, N. V., Bowyer, K. W., Hall, L. O. y Kegelmeyer, W. P. (2002). SMOTE: Synthetic Minority Over-sampling Technique. <em>Journal of Artificial Intelligence Research, 16</em>, 321–357.</p>
+  <p class="cita">Lemaître, G., Nogueira, F. y Aridas, C. K. (2017). Imbalanced-learn: A Python toolbox to tackle the curse of imbalanced datasets in machine learning. <em>Journal of Machine Learning Research, 18</em>(17), 1–5.</p>
+  <p class="cita">Pedregosa, F. et al. (2011). Scikit-learn: Machine learning in Python. <em>Journal of Machine Learning Research, 12</em>, 2825–2830.</p>
+  <p class="cita">Platt, J. (1999). Probabilistic outputs for support vector machines and comparisons to regularized likelihood methods. En A. J. Smola et al. (Eds.), <em>Advances in Large Margin Classifiers</em>. MIT Press.</p>
+  <p class="cita"><em>Iranian Churn Dataset</em> (2020) [Conjunto de datos]. UCI Machine Learning Repository, identificador 563. https://doi.org/10.24432/C5JW3Z</p>
+
+  <h2 style="margin-top:22pt">Anexo. Reproducibilidad y estructura del repositorio</h2>
+  <p>El entorno se gestiona con uv (<code>pyproject.toml</code> y <code>uv.lock</code> propios de esta carpeta, Python 3.11) y los cuadernos también están pensados para correr en Google Colab. Para reproducir los resultados basta con clonar el repositorio, entrar a la carpeta <code>churn/</code>, ejecutar <code>uv sync</code> y correr los cinco cuadernos en orden; cada uno lee lo que dejó el anterior.</p>
+  <table style="table-layout:fixed">
+    <caption>Tabla A1. Cuadernos, qué hacen y qué archivos generan.</caption>
+    <colgroup><col style="width:34%"><col style="width:30%"><col style="width:36%"></colgroup>
+    <thead><tr><th>Archivo</th><th>Responsabilidad</th><th>Genera</th></tr></thead>
+    <tbody>
+      <tr><td><code>00_Auditoria_Datos.ipynb</code></td><td>Auditoría del conjunto original: esquema, nulos, duplicados, dominios</td><td><code>resultados/auditoria_*.csv</code>, <code>AUDITORIA.md</code></td></tr>
+      <tr><td><code>01_EDA_Limpieza_Churn.ipynb</code></td><td>Carga, exploración, limpieza, agrupación de perfiles y partición</td><td><code>train.csv</code>, <code>test.csv</code>, <code>test_original.csv</code>, grupos de entrenamiento</td></tr>
+      <tr><td><code>02_Escalado_PCA_Seleccion_Churn.ipynb</code></td><td>Escalador, PCA y selección de variables</td><td><code>decisiones_preprocesamiento.joblib</code>, <code>comparacion_rasgos.csv</code></td></tr>
+      <tr><td><code>03_Balanceo_Comparacion_Modelos_Churn.ipynb</code></td><td>41 combinaciones de modelo y balanceo, controles de sobremuestreo y fuga</td><td><code>comparacion_modelos.csv</code>, <code>03_candidatos.csv</code>, <code>03_control_*.csv</code></td></tr>
+      <tr><td><code>04_Ajuste_Evaluacion_Exportacion_Churn.ipynb</code></td><td>Ajuste, calibración, umbral, validación anidada, prueba y exportación</td><td><code>models/modelo_final.joblib</code>, <code>models/metadata_modelo.json</code>, <code>ajuste_hiperparametros.csv</code>, <code>04_priorizacion_test.csv</code></td></tr>
+      <tr><td><code>05_Controles_Rigor_Churn.ipynb</code></td><td>Integridad de la partición, etiquetas mezcladas, agrupación estricta, vecinos</td><td><code>resultados/05_*.csv</code></td></tr>
+      <tr><td><code>app.py</code></td><td>Aplicación Gradio</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p>Las reglas del proyecto (estilo de código, partición por grupos, ausencia de fuga de información, comentarios en español) están en <code>churn/AGENTS.md</code>; el avance, las decisiones y la bitácora, en <code>churn/ESTADO.md</code>; el plan detallado, en <code>churn/PLAN.md</code>. Este proyecto es independiente del proyecto hermano de predicción de peligro sísmico que ocupa la raíz del repositorio: no reutiliza sus datos, particiones ni modelos, aunque comparte reglas generales de estilo de clase.</p>
+</section>
+
+</body>
+</html>

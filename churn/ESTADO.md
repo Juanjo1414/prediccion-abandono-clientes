@@ -11,7 +11,9 @@ Actualizado: 2026-10-10.
 - [x] Paso 7: notebook 02 simplificado (regresión logística y ANOVA), ejecutado en local; Colab pendiente.
 - [x] Paso 8: notebook 03 completado y ejecutado en local; Colab pendiente.
 - [x] Paso 9: notebook 04 completado y ejecutado en local (unos 26 minutos); Colab pendiente.
-- [ ] Pasos 10–11 (app, informe y presentación): pendientes.
+- [x] Paso 9b (adicional, no numerado en PLAN.md): notebook 05 de controles de rigor, ejecutado en local; Colab pendiente.
+- [x] Paso 10: app Gradio (`app.py`) creada y probada en local.
+- [x] Paso 11: informe (`informe/informe.html` e `Informe_Final.pdf`) y presentación (`presentacion/presentacion.html`) terminados.
 
 ## Decisiones vigentes
 
@@ -32,6 +34,8 @@ Actualizado: 2026-10-10.
 
 ## Bitácora
 
+- 2026-10-10: terminados los pasos 10 y 11 a petición del usuario, después de revisar que los cinco notebooks corrieran sin fallos. Notebook 00 tenía un error al reejecutarse (comprobaciones que exigían que `train.csv`/`test.csv` no existieran): se quitaron esas comprobaciones y se reejecutaron 00, 01 y 02 completos sin errores. Se creó `05_Controles_Rigor_Churn.ipynb` (integridad de archivos y de la partición por perfiles, etiquetas mezcladas al azar, agrupación más estricta de perfiles parecidos y revisión de vecinos cercanos): sin evidencia de fuga mecánica (ROC AUC con etiquetas mezcladas 0,492), pero con grupos más estrictos el F1 baja de 0,859 a 0,811, por lo que el F1 final se reporta como rango (0,81–0,86) y no como cifra única. Se creó `app.py` (formulario, priorización por CSV y pestaña del modelo) y se probó en local contra los 639 clientes de prueba (probabilidades idénticas a las del notebook 04). Se armaron `presentacion/presentacion.html` (14 diapositivas interactivas, mismo motor que la del proyecto de sismos con paleta y datos propios) y `informe/informe.html` con su `Informe_Final.pdf` (24 páginas), siguiendo la misma estructura que el informe del proyecto de sismos. Colab sigue sin probarse. Sin commits.
+
 - 2026-10-10: creados y ejecutados 03_Balanceo_Comparacion_Modelos_Churn.ipynb y 04_Ajuste_Evaluacion_Exportacion_Churn.ipynb a petición del usuario. Generan `comparacion_modelos.csv`, `03_candidatos.csv`, controles de sobremuestreo y de fuga, `ajuste_hiperparametros.csv`, `04_priorizacion_test.csv`, `models/modelo_final.joblib` (diccionario con pipeline, calibrador, umbral y columnas) y `models/metadata_modelo.json`, más figuras `03_*` y `04_*`. Verificada la recarga del modelo (probabilidades y predicciones idénticas). El 04 tardó unos 26 minutos, por encima de los 20 de referencia de las reglas; no se consultó antes. Las conclusiones del 04 se rellenaron sobre el notebook ya ejecutado, sin repetir la ejecución. Colab no probado. Sin commits.
 
 - 2026-10-09: revisión completa de 02_Escalado_PCA_Seleccion_Churn.ipynb. Completadas conclusiones e interpretaciones, guardadas asignaciones de diez particiones y comparación ANOVA, documentados alcance simplificado y sesgo de selección. Añadidas huellas de entradas y parámetros del modelo a decisiones_preprocesamiento.joblib; comprobadas plantilla sin ajustar e integración plana con imblearn. Ejecución completa sin errores de celda en local. StandardScaler gana con 0,5972; PCA 90 % 0,5733, PCA 95 % 0,5716, mejor ANOVA k=10 0,5729. No se consultó prueba. Colab pendiente.
@@ -42,4 +46,4 @@ Actualizado: 2026-10-10.
 
 - 2026-10-09: paso 2 terminado. Python 3.11.9, entorno `.venv` propio y `uv sync --locked` completado. Verificados los 13 imports principales (incluidos scikit-learn, imbalanced-learn, SHAP, Gradio, ipykernel y nbconvert), misma lista de dependencias que el proyecto anterior y ausencia de CSV/notebooks. El nombre largo impedía cargar un componente de scikit-learn; se recreó el entorno en `churn/` y los imports pasaron. Sin descargas de datos, entrenamiento ni modificaciones del proyecto sísmico. Colab todavía no probado.
 
-Siguiente tarea: paso 10, app Gradio con formulario y CSV, ranking de riesgo y métricas; usar las probabilidades calibradas del artefacto (`modelo_final.joblib`: pipeline, calibrador, umbral y columnas). No avanzar sin indicación del usuario.
+Siguiente tarea: si se pide, probar en Google Colab y hacer commit. No avanzar sin indicación del usuario.

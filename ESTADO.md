@@ -3,7 +3,7 @@
 > Este archivo lo actualiza quien termine una tarea (persona o agente). Es la forma de que todos sepamos en qué va el proyecto sin tener que preguntar.
 > Regla: al terminar, marca el avance, anota cualquier decisión nueva y agrega una línea a la bitácora (la más reciente arriba).
 
-**Última actualización:** 2026-10-08
+**Última actualización:** 2026-10-10
 
 ## Avance
 
@@ -14,10 +14,18 @@
 - [x] Notebooks de clase copiados en `referencia/`
 
 ### Notebooks
-- [x] 01 — Carga, EDA, limpieza, codificación y partición (ejecutado completo sin errores, 2026-10-06)
-- [x] 02 — Escalado, PCA y selección de rasgos (ejecutado completo sin errores, 2026-10-06)
-- [x] 03 — Balanceo y comparación de los 12 modelos (ejecutado completo sin errores, 2026-10-06)
-- [x] 04 — Ajuste, evaluación final y exportación (ejecutado completo sin errores, 2026-10-06)
+- [x] 01 — Carga, EDA, limpieza, codificación y partición (ejecutado completo sin errores; reejecutado 2026-10-10 como parte de la auditoría, sin cambios en los resultados)
+- [x] 02 — Escalado, PCA y selección de rasgos (ejecutado completo sin errores; reejecutado 2026-10-10 como parte de la auditoría)
+- [x] 03 — Balanceo y comparación de los 12 modelos (ejecutado completo sin errores; reejecutado 2026-10-10 como parte de la auditoría)
+- [x] 04 — Ajuste, evaluación final y exportación (ejecutado completo sin errores; 2026-10-10 se agregó una sección de **estimación anidada** del F1, sin tocar test)
+- [x] 05 — Controles de rigor (nuevo, 2026-10-10): hashes de integridad de los CSV, validación cruzada en bloques temporales (sin fechas reales, usando el orden de las filas) y etiquetas permutadas al azar; sin evidencia de fuga de información
+
+### Publicación y entregables
+- [x] App Gradio funcionando en local (probada el 2026-10-06, ver bitácora)
+- [ ] App Gradio funcionando en Colab (enlace público)
+- [x] README con resultados finales (2026-10-06; falta llenar los integrantes si cambian; falta reflejar la estimación anidada del 2026-10-10)
+- [x] Informe (`informe/Informe_Final.pdf`, 22 páginas; fuente en `informe/informe.html`; falta actualizar con la estimación anidada y los controles de rigor del notebook 05)
+- [ ] Presentación ensayada con demo (la presentación interactiva ya está en `presentacion/presentacion.html`; falta ensayar, probar la app en Colab y reflejar la estimación anidada)
 
 ### Publicación y entregables
 - [x] App Gradio funcionando en local (probada el 2026-10-06, ver bitácora)
@@ -77,7 +85,7 @@
 
 | Fecha | Quién | Qué se hizo | Resultado / siguiente paso |
 | :--- | :--- | :--- | :--- |
-| 2026-10-08 | Asistente | Se revisaron el código y las salidas guardadas del notebook 04 para explicar ajuste, calibración, umbral, evaluación y exportación | Se aclararon la precisión promedio, las métricas agrupadas de predicciones fuera de partición, los límites de la calibración y la consulta previa de test. Sin modificar ni ejecutar el notebook |
+| 2026-10-10 | Asistente | Auditoría completa a petición del usuario, comparando este proyecto con el de abandono de clientes (`churn/`) para entender por qué el F1 era tan distinto: se reejecutaron los notebooks 01 a 04 completos, se agregó una sección de **estimación anidada** del F1 en el notebook 04 (sin tocar test) y se creó `05_Controles_Rigor.ipynb` | Reejecución sin errores y sin cambios en los resultados ya publicados. Estimación anidada: F1 ≈ 0,304, consistente con el F1 de test (0,299), lo que descarta que el resultado de test haya sido optimista por azar. El notebook 05 (hashes de integridad, validación en bloques temporales por orden de fila y etiquetas permutadas) no encontró evidencia de fuga de información. Generó `resultados/04_estimacion_anidada.csv` y `resultados/05_*.csv`. Falta reflejar estos hallazgos en el informe y la presentación, y hacer commit |
 | 2026-10-07 | Asistente | Se revisaron las celdas y las salidas guardadas del notebook 03 para explicar las 41 combinaciones y la selección de candidatos | Explicación del catálogo, balanceo dentro del pipeline, métricas y gráficas. Se distinguió F1 cero de ausencia de alertas y se aclararon los límites de comparar promedios y desviaciones. Sin modificar ni ejecutar el notebook |
 | 2026-10-07 | Asistente | Se revisaron el código y las salidas guardadas del notebook 02 para explicarlo paso a paso | Explicación de CV, escalado, PCA, selectores y decisión final; se aclaró que VarianceThreshold sí admite pipeline y que ajustarlo antes de CV usa información de las particiones de validación. Sin modificar ni ejecutar el notebook |
 | 2026-10-06 | Asistente | Se leyeron todas las celdas y las salidas guardadas del notebook 01 para explicar su funcionamiento paso a paso | Explicación de carga, exploración, limpieza, phik, partición, codificación y exportación. Sin modificar ni volver a ejecutar el notebook |

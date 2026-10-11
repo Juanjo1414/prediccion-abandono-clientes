@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Predicción de abandono de clientes de telecomunicaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&family=Fira+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F7FB; --paper2:#E6ECF5; --paper3:#CBD6E6;
+  --coal:#0B1B33; --coal2:#13294B; --slate:#334155; --mute:#5B6B82;
+  --amber:#F59E0B; --amberd:#B45309; --blue:#1E40AF; --danger:#DC2626; --ok:#0F8B7A;
+  --titulo:'Fira Sans Condensed','Arial Narrow','Roboto Condensed',sans-serif;
+  --texto:'Fira Sans','Segoe UI',Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#07101F;overflow:hidden;font-family:var(--texto);color:var(--coal);-webkit-font-smoothing:antialiased}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center;transform:translate(-50%,-50%);background:var(--paper);overflow:hidden}
+.slide{position:absolute;inset:0;padding:96px 120px 110px;opacity:0;visibility:hidden;transform:translateX(28px);transition:opacity .55s ease,transform .55s ease,visibility 0s .55s;background:var(--paper)}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .55s ease,transform .55s ease,visibility 0s}
+.slide.dark{background:var(--coal);color:#E9EDF0}
+h1,h2,h3{font-family:var(--titulo);font-weight:700;letter-spacing:-.01em;line-height:.98}
+h1{font-size:150px}
+h2{font-size:92px;max-width:1500px}
+h3{font-size:44px;font-weight:600;line-height:1.05}
+p,li{font-size:31px;line-height:1.38;max-width:62ch}
+.lead{font-size:38px;line-height:1.3;color:var(--slate);max-width:44ch}
+.dark .lead{color:#B8C2CC}
+.mut{color:var(--mute)}
+.num{font-family:var(--titulo);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.am{color:var(--amber)} .bl{color:var(--blue)} .rd{color:var(--danger)} .gr{color:var(--ok)}
+.row{display:flex;gap:64px;align-items:flex-start}
+.col{display:flex;flex-direction:column}
+.grow{flex:1}
+.tag{display:inline-block;font-size:24px;font-weight:600;padding:6px 16px;border-radius:6px;background:var(--paper2);color:var(--slate)}
+.tag.amber{background:var(--amber);color:var(--coal)}
+.btn{font-family:var(--texto);font-size:26px;font-weight:600;border:2px solid var(--coal);background:transparent;color:var(--coal);padding:12px 26px;border-radius:8px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.btn:hover{background:var(--coal);color:var(--paper)}
+.btn:active{transform:scale(.97)}
+.btn.sel{background:var(--coal);color:var(--paper)}
+.dark .btn{border-color:#E9EDF0;color:#E9EDF0}.dark .btn:hover{background:#E9EDF0;color:var(--coal)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:var(--coal)}
+.btn.primary:hover{background:#ffc233;border-color:#ffc233;color:var(--coal)}
+button:focus-visible,input:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
+.frag{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.frag.show{opacity:1;transform:none}
+svg text{font-family:var(--texto)}
+.cap{font-size:24px;color:var(--mute);margin-top:14px;max-width:70ch;line-height:1.3}
+.dark .cap{color:#8896A5}
+
+/* HUD */
+#progress{position:fixed;left:0;top:0;height:6px;background:var(--amber);width:0;transition:width .4s ease;z-index:30}
+#hud{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;z-index:30;font-size:15px;color:#9aa6b2;pointer-events:none;font-family:var(--texto)}
+#hud .nav{pointer-events:auto;display:flex;gap:8px;align-items:center}
+#hud button{background:rgba(18,23,30,.82);color:#E9EDF0;border:1px solid #334155;border-radius:6px;font-size:15px;padding:6px 12px;cursor:pointer;font-family:var(--texto)}
+#hud button:hover{background:var(--amber);color:var(--coal);border-color:var(--amber)}
+#hud .pos{background:rgba(18,23,30,.82);padding:6px 12px;border-radius:6px;color:#E9EDF0;min-width:64px;text-align:center}
+#timer{position:fixed;right:18px;top:16px;z-index:30;background:rgba(18,23,30,.85);color:#E9EDF0;border-radius:6px;padding:6px 12px;font-size:16px;display:none;font-variant-numeric:tabular-nums}
+#hint{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:30;background:rgba(18,23,30,.9);color:#E9EDF0;border-radius:8px;padding:10px 18px;font-size:16px;transition:opacity .6s;font-family:var(--texto)}
+#notes{position:fixed;left:0;right:0;bottom:0;max-height:34vh;overflow:auto;background:rgba(18,23,30,.96);color:#E9EDF0;padding:18px 28px 56px;z-index:25;font-size:19px;line-height:1.45;display:none;border-top:4px solid var(--amber);font-family:var(--texto)}
+#notes b{color:var(--amber)}
+#overview{position:fixed;inset:0;background:rgba(11,15,20,.97);z-index:40;display:none;padding:40px;overflow:auto}
+#overview .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+#overview .card{background:var(--paper);color:var(--coal);border-radius:8px;padding:16px;cursor:pointer;min-height:110px;font-family:var(--titulo);font-size:26px;font-weight:600;line-height:1.05;border:3px solid transparent}
+#overview .card small{display:block;font-family:var(--texto);font-weight:500;font-size:14px;color:var(--mute);margin-bottom:8px}
+#overview .card:hover,#overview .card.cur{border-color:var(--amber)}
+#tip{position:fixed;pointer-events:none;background:var(--coal);color:#fff;padding:10px 14px;border-radius:6px;z-index:50;display:none;line-height:1.35;font-family:var(--texto);box-shadow:0 6px 24px rgba(0,0,0,.35)}
+
+/* Portada */
+#s1 canvas{position:absolute;left:0;top:140px;width:1920px;height:520px}
+#s1 .t{position:absolute;left:120px;bottom:110px;max-width:1500px}
+#s1 .eq{position:absolute;left:120px;top:90px;font-size:30px;color:#8896A5}
+#s1 .team{position:absolute;right:120px;bottom:118px;text-align:right;font-size:26px;line-height:1.5;color:#B8C2CC}
+
+/* Slide 2 */
+.shift{border:3px solid var(--coal);border-radius:14px;padding:30px 34px;width:560px;min-height:330px;background:var(--paper)}
+.shift.next{border-style:dashed;border-color:var(--mute);background:transparent}
+.chip{display:inline-block;background:var(--coal);color:#fff;border-radius:6px;font-size:25px;padding:6px 14px;margin:4px 6px 4px 0}
+.arrow{font-family:var(--titulo);font-size:90px;color:var(--amber);align-self:center;line-height:1}
+
+/* Slide 3 */
+.grupo{border:2px solid var(--paper3);border-radius:12px;padding:16px 22px;cursor:pointer;background:#FAFCFF;transition:border-color .2s,background .2s;text-align:left;font-family:var(--texto);width:100%}
+.grupo:hover{border-color:var(--slate)}
+.grupo.sel{border-color:var(--coal);background:#fff;box-shadow:6px 6px 0 var(--amber)}
+.grupo b{font-family:var(--titulo);font-size:36px;font-weight:600;display:block;line-height:1.05}
+.grupo span{font-size:23px;color:var(--mute)}
+#detalle{background:var(--coal);color:#E9EDF0;border-radius:14px;padding:34px 40px;min-height:430px;width:690px}
+#detalle p{font-size:28px}
+.vchip{display:inline-block;border:2px solid #4c5a6b;border-radius:6px;font-size:25px;padding:3px 12px;margin:4px 6px 4px 0;font-family:var(--texto)}
+.vchip.use{background:var(--amber);color:var(--coal);border-color:var(--amber);font-weight:600}
+
+/* dots */
+#dots{display:grid;grid-template-columns:repeat(10,1fr);gap:14px;width:620px}
+#dots i{display:block;aspect-ratio:1;border-radius:50%;background:var(--paper3);transition:background .35s,transform .35s}
+#dots i.p{background:var(--amber);transform:scale(1.08)}
+#dots i.ok{background:var(--ok)}
+#dots i.mis{background:var(--danger)}
+
+.bar{height:34px;background:var(--paper2);border-radius:5px;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.bar.am i{background:var(--amber)}
+.barlab{display:flex;justify-content:space-between;font-size:27px;margin:12px 0 5px}
+.compacto .barlab{font-size:25px;margin:8px 0 3px}.compacto .bar{height:26px}
+.barlab b{font-variant-numeric:tabular-nums}
+
+/* flow */
+.flow{display:flex;gap:18px;align-items:stretch}
+.step{flex:1;border:3px solid var(--paper3);border-radius:12px;padding:20px 22px;background:#FAFCFF;opacity:.35;transition:opacity .5s,border-color .5s,transform .5s}
+.step.on{opacity:1;border-color:var(--coal);transform:translateY(-6px)}
+.step h3{font-size:36px;margin-bottom:8px}
+.step p{font-size:24px;line-height:1.3}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:5px;background:var(--paper3);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:var(--coal);border:5px solid var(--amber);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--coal);border:5px solid var(--amber);cursor:pointer}
+.sl{margin:16px 0}
+.sl .l{display:flex;justify-content:space-between;font-size:27px;margin-bottom:10px}
+.sl .l b{font-variant-numeric:tabular-nums}
+.sl .l small{font-size:21px;color:var(--mute);display:block}
+
+.col3{display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
+.col3 h3{border-top:6px solid var(--coal);padding-top:16px;margin-bottom:14px}
+.col3 li{font-size:32px;margin:0 0 16px 26px;line-height:1.3}
+
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.active,.frag,.bar i,.step,#dots i{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="timer" title="Tiempo transcurrido (T para ocultar)">00:00</div>
+<div id="hint">← → avanzar · O vista general · N notas · T cronómetro · F pantalla completa</div>
+<div id="tip"></div>
+<div id="notes" role="region" aria-label="Notas del orador"></div>
+<div id="overview" role="dialog" aria-label="Vista general"><div class="grid" id="ovgrid"></div></div>
+<div id="hud">
+  <span>Abandono de clientes de telecomunicaciones · Fundamentos de IA · Universidad EIA</span>
+  <div class="nav">
+    <button id="bOv" aria-label="Vista general">Vista general</button>
+    <button id="bNotes" aria-label="Notas">Notas</button>
+    <button id="bPrev" aria-label="Anterior">←</button>
+    <span class="pos" id="pos">1 / 14</span>
+    <button id="bNext" aria-label="Siguiente">→</button>
+    <button id="bFull" aria-label="Pantalla completa">Pantalla completa</button>
+  </div>
+</div>
+
+<div id="stage">
+
+<!-- 1 PORTADA -->
+<section class="slide dark" id="s1" data-title="Portada">
+  <canvas id="sismo" width="1920" height="520"></canvas>
+  <div class="eq">Fundamentos de Inteligencia Artificial · Universidad EIA · 2026-2</div>
+  <div class="t">
+    <h1>¿Quién se va a ir?<br>Anticipar el abandono de clientes</h1>
+    <p class="lead" style="margin-top:28px">Nueve meses de uso para decidir, en el mes doce, a quién llamar primero.</p>
+  </div>
+  <div class="team">Juan Jose Jaramillo Mora<br>Sebastian Giraldo Franco<br>Martin Restrepo<br>Miguel Angel Zuleta<br>Julian Mora<br>Santiago Zuluaga</div>
+</section>
+
+<!-- 2 PROBLEMA -->
+<section class="slide" id="s2" data-title="Nueve meses, una decisión">
+  <h2>Nueve meses de señales y una decisión en el mes doce</h2>
+  <div class="row" style="margin-top:70px;align-items:stretch">
+    <div class="shift frag">
+      <h3>Meses 1 a 9</h3>
+      <p style="margin:10px 0 16px">Lo que sabemos de cada cliente de la empresa de telecomunicaciones.</p>
+      <span class="chip">llamadas</span><span class="chip">mensajes</span><span class="chip">fallas</span><span class="chip">plan</span><span class="chip">quejas</span>
+    </div>
+    <div class="arrow frag">→</div>
+    <div class="shift next frag">
+      <h3>Mes 12</h3>
+      <p style="margin:10px 0 16px">¿El cliente <b>abandonó</b> o <b>permaneció</b>?</p>
+      <p class="mut" style="font-size:26px">Es la etiqueta que queremos anticipar, con tiempo para actuar.</p>
+    </div>
+    <div class="col frag" style="justify-content:center;gap:18px;padding-left:20px">
+      <span class="tag amber" style="font-size:30px;align-self:flex-start">abandono = 1</span>
+      <span class="tag" style="font-size:30px;align-self:flex-start">permanece = 0</span>
+      <p class="mut" style="font-size:26px;max-width:26ch">Clasificación binaria sobre el dataset Iranian Churn (UCI 563).</p>
+    </div>
+  </div>
+  <p class="lead frag" style="margin-top:64px">El uso previsto es priorizar contactos de retención. No estimamos si una oferta evitará el abandono ni prometemos ahorros.</p>
+</section>
+
+<!-- 3 DATOS -->
+<section class="slide" id="s3" data-title="Los datos">
+  <h2>Iranian Churn: 3.150 clientes y once entradas</h2>
+  <div class="row" style="margin-top:56px;gap:80px">
+    <div style="width:560px">
+      <div class="col" style="gap:30px">
+        <div><span class="num" id="n1" style="font-size:150px;line-height:.9">0</span><p class="mut" style="font-size:28px">clientes en total</p></div>
+        <div><span class="num" id="n2" style="font-size:150px;line-height:.9">0</span><p class="mut" style="font-size:28px">entradas usadas por el modelo</p></div>
+        <div><span class="num" id="n3" style="font-size:150px;line-height:.9;color:var(--amberd)">0</span><p class="mut" style="font-size:28px">abandonos (15,7 %)</p></div>
+      </div>
+      <p class="cap">Fuente: UCI Machine Learning Repository (id 563). Licencia CC BY 4.0.</p>
+    </div>
+    <div style="width:560px" class="col" id="grupos" role="tablist" aria-label="Grupos de variables"></div>
+    <div id="detalle" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 4 RETO -->
+<section class="slide" id="s4" data-title="El reto: 1 de cada 6 abandona">
+  <h2>16 de cada 100 clientes abandonan</h2>
+  <div class="row" style="margin-top:56px;gap:100px">
+    <div>
+      <div id="dots"></div>
+      <p class="cap">Cada punto es un cliente. En ámbar, los que abandonaron (15,6 %).</p>
+    </div>
+    <div class="col" style="gap:26px;width:900px">
+      <p class="lead">Un modelo que responda siempre «permanece» acierta casi cuatro de cada cinco veces… y no detecta a nadie.</p>
+      <div class="row" style="gap:70px;align-items:flex-end">
+        <div><span class="num" id="acc0" style="font-size:150px;line-height:.9">84,4%</span><p class="mut" style="font-size:27px">accuracy de «siempre permanece»</p></div>
+        <div><span class="num rd" id="det0" style="font-size:150px;line-height:.9">0</span><p class="mut" style="font-size:27px">de 392 abandonos detectados</p></div>
+      </div>
+      <div class="row" style="gap:16px;margin-top:6px">
+        <button class="btn" id="bSiempre">Probar el modelo que nunca avisa</button>
+        <button class="btn" id="bReset">Reiniciar</button>
+      </div>
+      <p style="font-size:30px"><b>La métrica principal es el F1 del abandono</b>: equilibra detectar a los que se van con no molestar a los que se quedan. El accuracy es solo referencia.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 EDA -->
+<section class="slide" id="s5" data-title="Lo que vimos en los datos">
+  <h2>Quien se queja casi siempre se va</h2>
+  <div class="row" style="margin-top:50px;gap:90px">
+    <div style="width:840px">
+      <h3 style="margin-bottom:12px">Abandono según haya presentado una queja</h3>
+      <div id="eda1" class="compacto"></div>
+      <p class="cap">195 clientes se quejaron: 162 abandonaron. De los 2.316 que no se quejaron abandonaron 230.</p>
+    </div>
+    <div style="width:760px">
+      <h3 style="margin-bottom:12px">Relación con el abandono (phik)</h3>
+      <div id="eda2" class="compacto"></div>
+      <p class="cap">Más señal que en el problema sísmico: la queja llega a 0,75.</p>
+    </div>
+  </div>
+  <p class="frag" style="margin-top:34px;font-size:29px"><b>Cuidado con las copias:</b> hay 300 filas repetidas, así que los perfiles idénticos se reparten juntos, nunca entre entrenamiento y prueba. <b>Status</b> y <b>Customer Value</b> se dejaron fuera por falta de trazabilidad.</p>
+</section>
+
+<!-- 6 TRAMPAS -->
+<section class="slide" id="s6" data-title="Cómo evitamos trampas">
+  <h2>Cómo evitamos engañarnos con el resultado</h2>
+  <div class="flow" id="flow" style="margin-top:46px">
+    <div class="step"><h3>Perfiles juntos</h3><p>Los clientes con las mismas entradas van siempre al mismo lado.</p></div>
+    <div class="step"><h3>Prueba reservada</h3><p>20 % guardado, con 571 perfiles distintos. Se abre una sola vez.</p></div>
+    <div class="step"><h3>Todo en el pipeline</h3><p>Escalado y balanceo se ajustan solo con el entrenamiento de cada partición.</p></div>
+    <div class="step"><h3>Estimación anidada</h3><p>Hiperparámetros, calibración y umbral se repiten dentro de cada partición.</p></div>
+  </div>
+  <div class="row" style="margin-top:56px;gap:100px">
+    <div style="width:760px">
+      <h3 style="margin-bottom:6px">Control: etiquetas mezcladas al azar</h3>
+      <p class="mut" style="font-size:27px">Si hubiera fuga, el modelo seguiría acertando sin que exista relación real.</p>
+      <div class="row" style="gap:70px;margin-top:20px;align-items:flex-end">
+        <div><span class="num" id="aucReal" style="font-size:110px;line-height:1">0</span><p class="mut" style="font-size:24px">ROC AUC con etiquetas reales</p></div>
+        <div><span class="num rd" id="aucMezc" style="font-size:110px;line-height:1">0</span><p class="mut" style="font-size:24px">ROC AUC mezcladas (azar = 0,5)</p></div>
+      </div>
+    </div>
+    <div style="width:760px">
+      <h3 style="margin-bottom:6px">Control: agrupar perfiles parecidos</h3>
+      <p class="mut" style="font-size:27px">Una prueba más dura: clientes parecidos, no solo idénticos, quedan juntos.</p>
+      <div class="row" style="gap:70px;margin-top:20px;align-items:flex-end">
+        <div><span class="num" id="f1Exacta" style="font-size:110px;line-height:1">0</span><p class="mut" style="font-size:24px">F1 con perfiles idénticos</p></div>
+        <div><span class="num am" id="f1Estricta" style="font-size:110px;line-height:1;color:var(--amberd)">0</span><p class="mut" style="font-size:24px">F1 con grupos estrictos</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 HEATMAP -->
+<section class="slide" id="s7" data-title="41 combinaciones de modelo y balanceo">
+  <h2>41 combinaciones: gana lo que no es lineal</h2>
+  <div class="row" style="margin-top:30px;gap:60px">
+    <div>
+      <div class="row" style="gap:10px;margin-bottom:6px" id="metBtns"></div>
+      <svg id="svgHeat" width="1130" height="640" viewBox="0 0 1130 640"></svg>
+    </div>
+    <div class="col" style="gap:20px;width:520px">
+      <p style="font-size:30px"><b>12 modelos × 4 estrategias = 41 combinaciones</b> (class_weight solo existe en 5 modelos).</p>
+      <div><p class="mut" style="font-size:25px">Mejor F1 de los modelos lineales</p><span class="num" id="f1lin" style="font-size:96px;line-height:1">0</span></div>
+      <div><p class="mut" style="font-size:25px">Mejor F1 de Stacking y Random Forest</p><span class="num am" id="f1arb" style="font-size:96px;line-height:1;color:var(--amberd)">0</span></div>
+      <p style="font-size:27px">Elegimos los tres mejores de familias distintas, no solo por el F1: Stacking, Random Forest y la red neuronal.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 LINEAL VS NO LINEAL -->
+<section class="slide" id="s8" data-title="Por qué 0,6 y 0,86">
+  <h2>¿Por qué un modelo da 0,6 y otro 0,86?</h2>
+  <div class="row" style="margin-top:36px;gap:70px">
+    <div>
+      <h3 style="margin-bottom:8px">Mejor F1 de cada modelo</h3>
+      <svg id="svgFam" width="1000" height="620" viewBox="0 0 1000 620"></svg>
+    </div>
+    <div class="col" style="gap:18px;width:700px">
+      <h3>La señal está en las combinaciones</h3>
+      <p class="mut" style="font-size:26px">Abandono según queja y uso de llamadas (pasa el mouse):</p>
+      <svg id="svgCruce" width="700" height="250" viewBox="0 0 700 250"></svg>
+      <p style="font-size:27px">Un modelo lineal suma efectos; no puede decir «queja <b>y</b> poco uso». Los árboles, sí. Por eso la regresión logística se queda en 0,6 y Random Forest llega a 0,86.</p>
+      <p class="cap" style="margin-top:0">Revisamos si era fuga entre particiones: no hay duplicados exactos y los vecinos muy cercanos no coinciden más en etiqueta que los demás.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 ESTIMACION HONESTA -->
+<section class="slide" id="s9" data-title="Cuánto F1 esperar">
+  <h2>¿Cuánto F1 podemos esperar de verdad?</h2>
+  <div class="row" style="margin-top:36px;gap:70px">
+    <div>
+      <svg id="svgIC" width="1180" height="520" viewBox="0 0 1180 520"></svg>
+    </div>
+    <div class="col" style="gap:20px;width:560px">
+      <p style="font-size:29px">El primer número, el de la validación con selección, es el más optimista: hiperparámetros y umbral se eligieron con las mismas filas.</p>
+      <p style="font-size:29px">La estimación anidada (0,851) y la prueba (0,857) coinciden. El intervalo del 95 % de la prueba va de 0,80 a 0,91.</p>
+      <p style="font-size:29px"><b>Lectura prudente: entre 0,81 y 0,86.</b> Con grupos estrictos baja a 0,81, así que parte del resultado depende de que haya clientes parecidos en ambos lados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 UMBRAL -->
+<section class="slide" id="s10" data-title="Umbral y calibración">
+  <h2>¿Desde qué probabilidad damos la alerta?</h2>
+  <div class="row" style="margin-top:34px;gap:60px">
+    <div>
+      <svg id="svgThr" width="1020" height="540" viewBox="0 0 1020 540"></svg>
+      <div class="sl" style="margin:16px 20px 0 70px">
+        <div class="l"><span>Umbral de decisión</span><b id="uVal">37%</b></div>
+        <input type="range" id="uSl" min="5" max="90" step="1" value="37" aria-label="Umbral de decisión en porcentaje">
+      </div>
+    </div>
+    <div class="col" style="gap:14px;width:760px">
+      <div class="row" style="gap:30px">
+        <div><span class="num am" id="vF1" style="font-size:90px;color:var(--amberd)">0</span><p class="mut" style="font-size:24px">F1</p></div>
+        <div><span class="num bl" id="vRec" style="font-size:90px">0</span><p class="mut" style="font-size:24px">recall</p></div>
+        <div><span class="num" id="vPre" style="font-size:90px;color:var(--slate)">0</span><p class="mut" style="font-size:24px">precisión</p></div>
+      </div>
+      <p id="uTxt" style="font-size:27px;min-height:84px"></p>
+      <button class="btn primary" id="uElegido" style="align-self:flex-start">Volver al umbral elegido (37%)</button>
+      <h3 style="margin-top:0;font-size:32px">¿La probabilidad es confiable?</h3>
+      <svg id="svgCal" width="400" height="231" viewBox="0 0 520 300"></svg>
+      
+    </div>
+  </div>
+</section>
+
+<!-- 11 TEST -->
+<section class="slide" id="s11" data-title="Resultado en la prueba">
+  <h2>En la prueba: 90 de 103 abandonos detectados</h2>
+  <div class="row" style="margin-top:46px;gap:100px">
+    <div>
+      <svg id="svgCm" width="760" height="620" viewBox="0 0 760 620"></svg>
+      <p class="cap">639 clientes de prueba, umbral 37 %.</p>
+    </div>
+    <div style="width:860px">
+      <h3 style="margin-bottom:8px">Estimación de entrenamiento frente a prueba</h3>
+      <svg id="svgCmp" width="860" height="330" viewBox="0 0 860 330"></svg>
+      <p style="font-size:28px;margin-top:16px">F1 de prueba <b>0,857</b>, ROC AUC 0,982 y Brier 0,035. Solo 17 falsas alarmas entre 536 clientes que permanecen (3,2 %).</p>
+      <p style="font-size:28px;margin-top:12px">«Siempre permanece» saca 83,9 % de accuracy y detecta 0; nuestro modelo, 95,3 % y 87,4 % de recall.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 12 PRIORIZAR -->
+<section class="slide dark" id="s12" data-title="Priorizar a quién contactar">
+  <h2>¿A cuántos clientes contactamos?</h2>
+  <div class="row" style="margin-top:30px;gap:70px">
+    <div>
+      <p class="mut" style="font-size:24px;margin-bottom:10px">Los 639 clientes de prueba, de mayor a menor riesgo. En ámbar, los que de verdad abandonaron.</p>
+      <svg id="svgPri" width="1040" height="560" viewBox="0 0 1040 560"></svg>
+      <div class="sl" style="margin:14px 10px 0 10px">
+        <div class="l"><span>Clientes a contactar</span><b id="pVal">10%</b></div>
+        <input type="range" id="pSl" min="1" max="50" step="1" value="10" aria-label="Porcentaje de clientes a contactar">
+      </div>
+    </div>
+    <div class="col" style="gap:14px;width:720px">
+      <div class="row" style="gap:36px">
+        <div><span class="num" id="pN" style="font-size:96px;line-height:1">0</span><p class="mut" style="font-size:24px">clientes contactados</p></div>
+        <div><span class="num am" id="pPre" style="font-size:96px;line-height:1">0</span><p class="mut" style="font-size:24px">de ellos abandonaban</p></div>
+      </div>
+      <div class="row" style="gap:36px">
+        <div><span class="num" id="pRec" style="font-size:96px;line-height:1;color:#7DB2FF">0</span><p class="mut" style="font-size:24px">abandonos capturados</p></div>
+        <div><span class="num" id="pLift" style="font-size:96px;line-height:1">0</span><p class="mut" style="font-size:24px">veces mejor que al azar</p></div>
+      </div>
+      <div class="row" style="gap:12px;margin-top:8px">
+        <button class="btn primary" id="bCliente">Cliente real al azar</button>
+      </div>
+      <p id="clienteTxt" style="font-size:27px;min-height:80px;color:#E8EEF8"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 13 CONCLUSIONES -->
+<section class="slide" id="s13" data-title="Conclusiones y límites">
+  <h2>Qué logramos, qué no, y qué sigue</h2>
+  <div class="col3" style="margin-top:56px">
+    <div class="frag">
+      <h3>Lo que logramos</h3>
+      <ul>
+        <li>Un modelo calibrado que detecta el 87 % de los abandonos con 17 falsas alarmas entre 536.</li>
+        <li>Un procedimiento sin fugas verificadas: etiquetas mezcladas dan ROC AUC 0,49.</li>
+        <li>Una lista de prioridad: contactando al 10 % acierta el 95 %.</li>
+      </ul>
+    </div>
+    <div class="frag">
+      <h3>Lo que no podemos afirmar</h3>
+      <ul>
+        <li>No hay fechas: algunas entradas (uso cero) podrían ya reflejar un abandono ocurrido.</li>
+        <li>Con grupos estrictos el F1 baja a 0,81.</li>
+        <li>No sabemos si una oferta evita el abandono, ni cuánto ahorra.</li>
+        <li>Datos de una sola empresa.</li>
+      </ul>
+    </div>
+    <div class="frag">
+      <h3>Con más tiempo</h3>
+      <ul>
+        <li>Validar hacia el futuro con datos fechados.</li>
+        <li>Costos reales de contactar y de perder un cliente para fijar el umbral.</li>
+        <li>Revisar Status y Customer Value con su definición oficial.</li>
+        <li>Probar el modelo en otro periodo o mercado.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 14 CIERRE -->
+<section class="slide dark" id="s14" data-title="Gracias">
+  <svg id="svgFin" width="1920" height="260" viewBox="0 0 1920 260" style="position:absolute;left:0;top:120px"></svg>
+  <div class="t" style="position:absolute;left:120px;top:430px">
+    <h1 style="font-size:140px">Gracias</h1>
+    <p class="lead" style="margin-top:24px">Preguntas, y si quieren, evaluamos un cliente de la prueba en la app.</p>
+  </div>
+  <div style="position:absolute;left:120px;bottom:110px;font-size:23px;line-height:1.5;color:#8FA3C2;max-width:1100px">
+    Iranian Churn [Conjunto de datos]. UCI Machine Learning Repository. doi:10.24432/C5JW3Z<br>
+    Código, notebooks, app e informe en la carpeta churn del repositorio: github.com/Juanjo1414/prediccion-sismica-minas
+  </div>
+  <div style="position:absolute;right:120px;bottom:118px;text-align:right;font-size:26px;line-height:1.5;color:#B5C4DD">Juan Jose Jaramillo Mora<br>Sebastian Giraldo Franco<br>Martin Restrepo<br>Miguel Angel Zuleta<br>Julian Mora<br>Santiago Zuluaga</div>
+</section>
+
+
+</div><!-- /stage -->
+
+<script>
+window.DATOS = {"meta": {"modelo": "Random Forest", "estrategia_balanceo": "class_weight", "preprocesamiento": "StandardScaler", "calibracion": "sigmoide (regresión logística sobre puntajes fuera de pliegue)", "columnas_entrada": ["fallas_llamadas", "quejas", "antiguedad", "nivel_cargo", "segundos_uso", "frecuencia_uso", "frecuencia_sms", "numeros_distintos", "grupo_edad", "plan_tarifario", "edad"], "umbral": 0.37, "hiperparametros": {"modelo__max_depth": "15", "modelo__min_samples_leaf": "1", "modelo__n_estimators": "400"}, "metricas_anidadas_entrenamiento": {"F1": 0.8509451425014014, "F1_desviacion": 0.0758463452206477, "Recall": 0.882628205128205, "Precision": 0.8231142755106091, "Precision_promedio": 0.895499049109816, "ROC_AUC": 0.9800282430102762, "Brier": 0.0383467057368243}, "metricas_test": {"F1": 0.8571428571428571, "Recall": 0.8737864077669902, "Precision": 0.8411214953271028, "ROC_AUC": 0.981968193015505, "Accuracy": 0.9530516431924883, "Precision_promedio": 0.933403150957092, "Brier": 0.03465032913435302}, "intervalos_bootstrap_test_95": {"F1": [0.8, 0.9139861751152073], "Recall": [0.8, 0.9327871148459383], "Precision": [0.7567508813160988, 0.9293164200140944], "Precision_promedio": [0.8812963956198441, 0.9675044398840207]}, "fecha_entrenamiento": "2026-10-10T22:54:08", "version_sklearn": "1.9.1", "version_imblearn": "0.14.2"}, "columnas": ["fallas_llamadas", "quejas", "antiguedad", "nivel_cargo", "segundos_uso", "frecuencia_uso", "frecuencia_sms", "numeros_distintos", "grupo_edad", "plan_tarifario", "edad"], "umbral": 0.37, "umbrales": [{"u": 0.01, "f1": 0.557541100786276, "recall": 0.9948979591836735, "precision": 0.3872889771598808}, {"u": 0.02, "f1": 0.6193136472466081, "recall": 0.9897959183673469, "precision": 0.45063879210220675}, {"u": 0.03, "f1": 0.6581849024597116, "recall": 0.9897959183673469, "precision": 0.49301143583227447}, {"u": 0.04, "f1": 0.6892252894033838, "recall": 0.9872448979591837, "precision": 0.5294117647058824}, {"u": 0.05, "f1": 0.7051282051282052, "recall": 0.9821428571428571, "precision": 0.55}, {"u": 0.06, "f1": 0.7231638418079096, "recall": 0.9795918367346939, "precision": 0.573134328358209}, {"u": 0.07, "f1": 0.7427466150870407, "recall": 0.9795918367346939, "precision": 0.5981308411214953}, {"u": 0.08, "f1": 0.7576656775469832, "recall": 0.9770408163265306, "precision": 0.6187399030694669}, {"u": 0.09, "f1": 0.7683049147442327, "recall": 0.9770408163265306, "precision": 0.6330578512396694}, {"u": 0.1, "f1": 0.780040733197556, "recall": 0.9770408163265306, "precision": 0.6491525423728813}, {"u": 0.11, "f1": 0.7908428720083247, "recall": 0.9693877551020408, "precision": 0.6678383128295254}, {"u": 0.12, "f1": 0.8029661016949152, "recall": 0.9668367346938775, "precision": 0.6865942028985508}, {"u": 0.13, "f1": 0.8098290598290598, "recall": 0.9668367346938775, "precision": 0.6966911764705882}, {"u": 0.14, "f1": 0.819068255687974, "recall": 0.9642857142857143, "precision": 0.711864406779661}, {"u": 0.15, "f1": 0.8262295081967214, "recall": 0.9642857142857143, "precision": 0.722753346080306}, {"u": 0.16, "f1": 0.827661909989023, "recall": 0.9617346938775511, "precision": 0.7263969171483622}, {"u": 0.17, "f1": 0.834070796460177, "recall": 0.9617346938775511, "precision": 0.736328125}, {"u": 0.18, "f1": 0.832408435072142, "recall": 0.9566326530612245, "precision": 0.7367387033398821}, {"u": 0.19, "f1": 0.8376259798432251, "recall": 0.9540816326530612, "precision": 0.7465069860279441}, {"u": 0.2, "f1": 0.8425821064552661, "recall": 0.9489795918367347, "precision": 0.7576374745417516}, {"u": 0.21, "f1": 0.8457142857142858, "recall": 0.9438775510204082, "precision": 0.7660455486542443}, {"u": 0.22, "f1": 0.845360824742268, "recall": 0.9413265306122449, "precision": 0.7671517671517671}, {"u": 0.23, "f1": 0.8463302752293578, "recall": 0.9413265306122449, "precision": 0.76875}, {"u": 0.24, "f1": 0.8456221198156681, "recall": 0.9362244897959183, "precision": 0.7710084033613446}, {"u": 0.25, "f1": 0.8449074074074074, "recall": 0.9311224489795918, "precision": 0.7733050847457628}, {"u": 0.26, "f1": 0.8498253783469151, "recall": 0.9311224489795918, "precision": 0.7815845824411135}, {"u": 0.27, "f1": 0.851808634772462, "recall": 0.9311224489795918, "precision": 0.7849462365591398}, {"u": 0.28, "f1": 0.8578143360752056, "recall": 0.9311224489795918, "precision": 0.7952069716775599}, {"u": 0.29, "f1": 0.8571428571428571, "recall": 0.9260204081632653, "precision": 0.7978021978021979}, {"u": 0.3, "f1": 0.8568019093078759, "recall": 0.9158163265306123, "precision": 0.804932735426009}, {"u": 0.31, "f1": 0.8554360812425329, "recall": 0.9132653061224489, "precision": 0.8044943820224719}, {"u": 0.32, "f1": 0.8571428571428571, "recall": 0.9030612244897959, "precision": 0.815668202764977}, {"u": 0.33, "f1": 0.8578371810449574, "recall": 0.9005102040816326, "precision": 0.8190255220417634}, {"u": 0.34, "f1": 0.8547008547008547, "recall": 0.8928571428571429, "precision": 0.819672131147541}, {"u": 0.35, "f1": 0.8578431372549019, "recall": 0.8928571428571429, "precision": 0.8254716981132075}, {"u": 0.36, "f1": 0.8585485854858549, "recall": 0.8903061224489796, "precision": 0.828978622327791}, {"u": 0.37, "f1": 0.8596059113300493, "recall": 0.8903061224489796, "precision": 0.830952380952381}, {"u": 0.38, "f1": 0.8596059113300493, "recall": 0.8903061224489796, "precision": 0.830952380952381}, {"u": 0.39, "f1": 0.8525402726146221, "recall": 0.8775510204081632, "precision": 0.8289156626506025}, {"u": 0.4, "f1": 0.8582183186951067, "recall": 0.8724489795918368, "precision": 0.8444444444444444}, {"u": 0.41, "f1": 0.8564231738035264, "recall": 0.8673469387755102, "precision": 0.845771144278607}, {"u": 0.42, "f1": 0.8556962025316456, "recall": 0.8622448979591837, "precision": 0.8492462311557789}, {"u": 0.43, "f1": 0.8556962025316456, "recall": 0.8622448979591837, "precision": 0.8492462311557789}, {"u": 0.44, "f1": 0.8520408163265306, "recall": 0.8520408163265306, "precision": 0.8520408163265306}, {"u": 0.45, "f1": 0.8538461538461538, "recall": 0.8494897959183674, "precision": 0.8582474226804123}, {"u": 0.46, "f1": 0.8464516129032258, "recall": 0.8367346938775511, "precision": 0.856396866840731}, {"u": 0.47, "f1": 0.8415584415584415, "recall": 0.826530612244898, "precision": 0.8571428571428571}, {"u": 0.48, "f1": 0.8370273794002607, "recall": 0.8188775510204082, "precision": 0.856}, {"u": 0.49, "f1": 0.8366013071895425, "recall": 0.8163265306122449, "precision": 0.8579088471849866}, {"u": 0.5, "f1": 0.8366013071895425, "recall": 0.8163265306122449, "precision": 0.8579088471849866}, {"u": 0.51, "f1": 0.8346456692913385, "recall": 0.8112244897959183, "precision": 0.8594594594594595}, {"u": 0.52, "f1": 0.8315789473684211, "recall": 0.8061224489795918, "precision": 0.8586956521739131}, {"u": 0.53, "f1": 0.8284960422163589, "recall": 0.8010204081632653, "precision": 0.8579234972677595}, {"u": 0.54, "f1": 0.828042328042328, "recall": 0.798469387755102, "precision": 0.8598901098901099}, {"u": 0.55, "f1": 0.8264900662251655, "recall": 0.7959183673469388, "precision": 0.859504132231405}, {"u": 0.56, "f1": 0.8229027962716379, "recall": 0.7882653061224489, "precision": 0.8607242339832869}, {"u": 0.57, "f1": 0.8229027962716379, "recall": 0.7882653061224489, "precision": 0.8607242339832869}, {"u": 0.58, "f1": 0.8197596795727636, "recall": 0.7831632653061225, "precision": 0.8599439775910365}, {"u": 0.59, "f1": 0.8165997322623829, "recall": 0.7780612244897959, "precision": 0.8591549295774648}, {"u": 0.6, "f1": 0.8129205921938089, "recall": 0.7704081632653061, "precision": 0.8603988603988604}, {"u": 0.61, "f1": 0.8097165991902834, "recall": 0.7653061224489796, "precision": 0.8595988538681948}, {"u": 0.62, "f1": 0.8092016238159675, "recall": 0.7627551020408163, "precision": 0.861671469740634}, {"u": 0.63, "f1": 0.8038147138964578, "recall": 0.7525510204081632, "precision": 0.8625730994152047}, {"u": 0.64, "f1": 0.801641586867305, "recall": 0.7474489795918368, "precision": 0.8643067846607669}, {"u": 0.65, "f1": 0.8038674033149171, "recall": 0.7423469387755102, "precision": 0.8765060240963856}, {"u": 0.66, "f1": 0.8016643550624133, "recall": 0.7372448979591837, "precision": 0.878419452887538}, {"u": 0.67, "f1": 0.7932960893854749, "recall": 0.7244897959183674, "precision": 0.8765432098765432}, {"u": 0.68, "f1": 0.7848101265822784, "recall": 0.7117346938775511, "precision": 0.8746081504702194}, {"u": 0.69, "f1": 0.7824858757062146, "recall": 0.7066326530612245, "precision": 0.8765822784810127}, {"u": 0.7, "f1": 0.7818696883852692, "recall": 0.7040816326530612, "precision": 0.8789808917197452}, {"u": 0.71, "f1": 0.7731811697574893, "recall": 0.6913265306122449, "precision": 0.8770226537216829}, {"u": 0.72, "f1": 0.7696709585121603, "recall": 0.6862244897959183, "precision": 0.8762214983713354}, {"u": 0.73, "f1": 0.764367816091954, "recall": 0.6785714285714286, "precision": 0.875}, {"u": 0.74, "f1": 0.762589928057554, "recall": 0.6760204081632653, "precision": 0.8745874587458746}, {"u": 0.75, "f1": 0.7518142235123367, "recall": 0.6607142857142857, "precision": 0.8720538720538721}, {"u": 0.76, "f1": 0.7463556851311953, "recall": 0.6530612244897959, "precision": 0.8707482993197279}, {"u": 0.77, "f1": 0.7448680351906158, "recall": 0.6479591836734694, "precision": 0.8758620689655172}, {"u": 0.78, "f1": 0.7355982274741507, "recall": 0.6352040816326531, "precision": 0.8736842105263158}, {"u": 0.79, "f1": 0.7318518518518519, "recall": 0.6301020408163265, "precision": 0.872791519434629}, {"u": 0.8, "f1": 0.7294469357249627, "recall": 0.6224489795918368, "precision": 0.8808664259927798}, {"u": 0.81, "f1": 0.7228915662650602, "recall": 0.6122448979591837, "precision": 0.8823529411764706}, {"u": 0.82, "f1": 0.7170953101361573, "recall": 0.6045918367346939, "precision": 0.8810408921933085}, {"u": 0.83, "f1": 0.7013782542113323, "recall": 0.5841836734693877, "precision": 0.8773946360153256}, {"u": 0.84, "f1": 0.684375, "recall": 0.5586734693877551, "precision": 0.8830645161290323}, {"u": 0.85, "f1": 0.6772655007949125, "recall": 0.5433673469387755, "precision": 0.8987341772151899}, {"u": 0.86, "f1": 0.6380165289256199, "recall": 0.4923469387755102, "precision": 0.9061032863849765}, {"u": 0.87, "f1": 0.63, "recall": 0.48214285714285715, "precision": 0.9086538461538461}, {"u": 0.88, "f1": 0.6125211505922166, "recall": 0.461734693877551, "precision": 0.9095477386934674}, {"u": 0.89, "f1": 0.5958188153310104, "recall": 0.4362244897959184, "precision": 0.9395604395604396}, {"u": 0.9, "f1": 0.5734513274336284, "recall": 0.413265306122449, "precision": 0.9364161849710982}, {"u": 0.91, "f1": 0.5607142857142857, "recall": 0.4005102040816326, "precision": 0.9345238095238095}, {"u": 0.92, "f1": 0.5477477477477477, "recall": 0.3877551020408163, "precision": 0.9325153374233128}, {"u": 0.93, "f1": 0.5239852398523985, "recall": 0.3622448979591837, "precision": 0.9466666666666667}, {"u": 0.94, "f1": 0.5074626865671642, "recall": 0.3469387755102041, "precision": 0.9444444444444444}, {"u": 0.95, "f1": 0.48091603053435117, "recall": 0.32142857142857145, "precision": 0.9545454545454546}], "calibracion_cv": {"pred": [6.208201900500018e-09, 9.68231900651968e-09, 0.00019214376007632483, 0.0007102173457732166, 0.00208577712159614, 0.006327924761280864, 0.020042399815905828, 0.08610446560901887, 0.5104981230227253, 0.9390384780595361], "real": [0.0, 0.0, 0.0, 0.0, 0.0, 0.008097165991902834, 0.01195219123505976, 0.04780876494023904, 0.6111111111111112, 0.884]}, "calibracion_test": {"pred": [7.715447401471794e-09, 0.0003133859043014939, 0.0007976024747655615, 0.0019438159005008204, 0.004927369329066333, 0.016639934248723346, 0.07934073071652205, 0.4724217201027723, 0.9252921079927684], "real": [0.0, 0.0, 0.034482758620689655, 0.0, 0.0, 0.015625, 0.0625, 0.5625, 0.953125]}, "confusion_test": {"tn": 519, "fp": 17, "fn": 13, "tp": 90}, "test_prob": [0.0012, 0.0, 0.5984, 0.0, 0.0, 0.9998, 0.9988, 0.0, 0.0438, 0.002, 0.0059, 0.0, 0.0046, 0.0129, 0.0005, 0.0004, 0.0, 0.0273, 0.0744, 0.9988, 0.0029, 0.0005, 0.0042, 0.0029, 0.0, 0.0002, 0.0035, 0.0, 0.0, 0.0122, 0.0, 0.1359, 0.0008, 0.0129, 0.0047, 0.0, 0.0, 0.0002, 0.7539, 0.0009, 0.0041, 0.0002, 0.0002, 0.0, 0.0008, 0.0125, 0.3351, 0.002, 0.0, 0.0002, 0.0941, 0.0, 0.0, 0.6628, 0.2443, 0.0002, 0.0045, 0.005, 0.0141, 0.0017, 0.0012, 0.086, 0.9942, 0.9978, 0.6482, 0.6482, 0.0024, 0.0, 0.003, 0.0008, 0.0, 0.0033, 0.0002, 0.0167, 0.9591, 0.0887, 0.1141, 0.0359, 0.3795, 0.0234, 0.9983, 0.4408, 0.0433, 0.0051, 0.0063, 0.3156, 0.0, 0.0, 0.0, 0.0174, 0.0219, 0.0, 0.0002, 0.0088, 0.0, 0.0005, 0.5984, 0.959, 0.7988, 0.0005, 0.0021, 0.001, 0.016, 0.004, 0.0, 0.3179, 0.0, 0.1018, 0.0, 0.0176, 0.006, 0.0, 0.0016, 0.0, 0.9835, 0.0, 0.0008, 0.0008, 0.0005, 0.0137, 0.0287, 0.044, 0.0005, 0.0249, 0.0, 0.8602, 0.0007, 0.8891, 0.0047, 0.0005, 0.0005, 0.0003, 0.0, 0.0012, 0.078, 0.5984, 0.9655, 0.959, 0.5472, 0.0008, 0.0001, 0.0035, 0.0081, 0.0086, 0.0025, 0.0238, 0.001, 0.0, 0.1138, 0.0, 0.942, 0.0035, 0.7069, 0.0002, 0.0, 0.0978, 0.0, 0.0, 0.0002, 0.0029, 0.642, 0.0266, 0.0051, 0.005, 0.0075, 0.0016, 0.0016, 0.0025, 0.0217, 0.0, 0.004, 0.0481, 0.0, 0.5984, 0.0, 0.8755, 0.004, 0.0, 0.0025, 0.0005, 0.4131, 0.0012, 0.0, 0.5984, 0.0, 0.0, 0.967, 0.0438, 0.002, 0.0059, 0.0012, 0.0, 0.5984, 0.0, 0.0, 0.9998, 0.0438, 0.002, 0.0059, 0.5984, 0.0007, 0.0029, 0.0, 0.0, 0.9419, 0.9988, 0.0042, 0.0, 0.0, 0.0005, 0.3143, 0.0002, 0.0, 0.0, 0.5984, 0.0, 0.0, 0.0046, 0.9989, 0.959, 0.8638, 0.0005, 0.0, 0.0024, 0.145, 0.0101, 0.0022, 0.0003, 0.0, 0.0002, 0.023, 0.0005, 0.0, 0.002, 0.0005, 0.0016, 0.0001, 0.0632, 0.9517, 0.8906, 0.0002, 0.0001, 0.0016, 0.0008, 0.0001, 0.0103, 0.0, 0.0228, 0.0017, 0.0339, 0.0, 0.6823, 0.9938, 0.0, 0.1636, 0.002, 0.0002, 0.0, 0.0, 0.0055, 0.0426, 0.0, 0.0, 0.0, 0.9882, 0.1172, 0.1365, 0.0013, 0.0, 0.0057, 0.0167, 0.115, 0.0313, 0.5081, 0.5081, 0.8673, 0.0069, 0.0369, 0.0051, 0.3517, 0.2375, 0.0005, 0.0005, 0.0, 0.0009, 0.0001, 0.0541, 0.0001, 0.0142, 0.0989, 0.0203, 0.0, 0.0089, 0.0, 0.4111, 0.6723, 0.0012, 0.003, 0.0261, 0.0009, 0.0004, 0.0013, 0.0052, 0.0035, 0.0685, 0.0, 0.0803, 0.0, 0.0002, 0.1338, 0.0002, 0.0002, 0.0129, 0.0005, 0.0, 0.0012, 0.0284, 0.0062, 0.0137, 0.5984, 0.0012, 0.0115, 0.0092, 0.008, 0.0051, 0.0129, 0.0059, 0.0711, 0.0009, 0.0265, 0.0, 0.0005, 0.1579, 0.0002, 0.8187, 0.9104, 0.0, 0.0005, 0.0798, 0.0226, 0.0045, 0.0, 0.0815, 0.0101, 0.3685, 0.077, 0.0005, 0.0016, 0.0005, 0.081, 0.003, 0.0036, 0.0053, 0.748, 0.9032, 0.0, 0.0025, 0.0005, 0.0011, 0.0025, 0.0, 0.5984, 0.0003, 0.0249, 0.0, 0.6332, 0.0042, 0.0007, 0.0002, 0.0055, 0.0083, 0.0012, 0.9774, 0.0016, 0.0045, 0.0541, 0.0, 0.1231, 0.4155, 0.0005, 0.5319, 0.0016, 0.0285, 0.6753, 0.0005, 0.8221, 0.7941, 0.6631, 0.8543, 0.0002, 0.0035, 0.0618, 0.039, 0.0, 0.2844, 0.0069, 0.0, 0.0274, 0.0012, 0.0038, 0.0033, 0.0, 0.0, 0.5971, 0.2229, 0.0, 0.002, 0.0115, 0.0088, 0.6748, 0.5984, 0.0007, 0.0029, 0.0, 0.9979, 0.0, 0.9419, 0.9829, 0.9998, 0.9973, 0.0042, 0.0, 0.0, 0.0005, 0.0, 0.0002, 0.0, 0.5984, 0.0007, 0.0029, 0.0, 0.0, 0.9829, 0.9898, 0.9988, 0.0042, 0.0, 0.0, 0.0005, 0.0, 0.0002, 0.0, 0.0005, 0.1721, 0.6508, 0.0132, 0.0029, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0002, 0.0, 0.103, 0.0, 0.003, 0.0012, 0.0094, 0.0005, 0.0, 0.0, 0.5006, 0.0, 0.2153, 0.0874, 0.0, 0.0, 0.0, 0.0012, 0.0, 0.0094, 0.0012, 0.0002, 0.0, 0.0331, 0.968, 0.9548, 0.0002, 0.9896, 0.0, 0.0, 0.0, 0.004, 0.0, 0.0005, 0.166, 0.0323, 0.3329, 0.0008, 0.4263, 0.0997, 0.0198, 0.0057, 0.0, 0.0058, 0.0, 0.7608, 0.8145, 0.0008, 0.0133, 0.0094, 0.0366, 0.0005, 0.0594, 0.0, 0.0, 0.0005, 0.9364, 0.8414, 0.014, 0.0, 0.0108, 0.3761, 0.0008, 0.0, 0.07, 0.0008, 0.0003, 0.0, 0.0, 0.0101, 0.0994, 0.9704, 0.0, 0.9951, 0.9803, 0.0, 0.0002, 0.0409, 0.0097, 0.0011, 0.2037, 0.0045, 0.0005, 0.3556, 0.0, 0.0, 0.8783, 0.0478, 0.0008, 0.4169, 0.0173, 0.0032, 0.0008, 0.0019, 0.0002, 0.4842, 0.0561, 0.0005, 0.0835, 0.3517, 0.4399, 0.3646, 0.0137, 0.0005, 0.0005, 0.0411, 0.0, 0.2064, 0.9296, 0.1177, 0.5004, 0.002, 0.0002, 0.0, 0.0923, 0.0002, 0.9962, 0.9817, 0.6748, 0.0, 0.0, 0.002, 0.0094, 0.0, 0.0129, 0.0005, 0.0005, 0.0, 0.8508, 0.0057, 0.0008, 0.003, 0.0265, 0.0002, 0.1104, 0.0, 0.0005, 0.7955, 0.0002, 0.0, 0.0005, 0.0002, 0.0005, 0.0012, 0.0, 0.0, 0.0093, 0.3128, 0.0008, 0.0045, 0.008, 0.0008, 0.0, 0.0005, 0.6936, 0.0005, 0.0152, 0.0613, 0.0467, 0.0005, 0.0051, 0.0025, 0.0037, 0.002, 0.001, 0.0417, 0.795, 0.6842, 0.1174, 0.004, 0.004, 0.003, 0.0012, 0.0005, 0.026, 0.1721, 0.0132, 0.0029, 0.0, 0.0, 0.0005, 0.026, 0.1721, 0.0132, 0.0029, 0.0, 0.0], "test_y": [0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "importancias": [["frecuencia_uso", 0.19], ["segundos_uso", 0.169], ["quejas", 0.1533], ["frecuencia_sms", 0.1205], ["antiguedad", 0.0966], ["numeros_distintos", 0.0876], ["fallas_llamadas", 0.0617], ["nivel_cargo", 0.0436], ["grupo_edad", 0.0383], ["edad", 0.0366], ["plan_tarifario", 0.0026]], "quejas": {"0": {"tasa": 0.0993, "abandonos": 230, "clientes": 2316}, "1": {"tasa": 0.8308, "abandonos": 162, "clientes": 195}}, "cruce_quejas_uso": [{"quejas": 0, "uso": "bajo (0-19)", "n": 421, "tasa": 0.334916864608076}, {"quejas": 0, "uso": "medio (20-60)", "n": 792, "tasa": 0.0845959595959596}, {"quejas": 0, "uso": "alto (61+)", "n": 1103, "tasa": 0.019945602901178604}, {"quejas": 1, "uso": "bajo (0-19)", "n": 41, "tasa": 1.0}, {"quejas": 1, "uso": "medio (20-60)", "n": 121, "tasa": 0.8925619834710744}, {"quejas": 1, "uso": "alto (61+)", "n": 33, "tasa": 0.3939393939393939}], "phik": [["quejas", 0.747], ["segundos_uso", 0.464], ["frecuencia_uso", 0.435], ["numeros_distintos", 0.379], ["frecuencia_sms", 0.331], ["antiguedad", 0.312], ["nivel_cargo", 0.248], ["plan_tarifario", 0.161], ["grupo_edad", 0.109], ["edad", 0.109], ["fallas_llamadas", 0.0]], "comparacion": [{"Modelo": "Stacking", "Estrategia": "SMOTENC", "F1": 0.8617, "F1_std": 0.0509, "Recall": 0.8954, "Precision": 0.834, "ROC_AUC": 0.9812, "Accuracy": 0.955}, {"Modelo": "Random Forest", "Estrategia": "class_weight", "F1": 0.8581, "F1_std": 0.0471, "Recall": 0.8977, "Precision": 0.8259, "ROC_AUC": 0.9821, "Accuracy": 0.9534}, {"Modelo": "Random Forest", "Estrategia": "SMOTENC", "F1": 0.8545, "F1_std": 0.0457, "Recall": 0.888, "Precision": 0.8268, "ROC_AUC": 0.9798, "Accuracy": 0.9526}, {"Modelo": "Random Forest", "Estrategia": "Sin balanceo", "F1": 0.8386, "F1_std": 0.0535, "Recall": 0.801, "Precision": 0.8842, "ROC_AUC": 0.984, "Accuracy": 0.9522}, {"Modelo": "Red neuronal (MLP)", "Estrategia": "Sin balanceo", "F1": 0.8378, "F1_std": 0.0323, "Recall": 0.8317, "Precision": 0.8468, "ROC_AUC": 0.9829, "Accuracy": 0.9498}, {"Modelo": "Red neuronal (MLP)", "Estrategia": "SMOTENC", "F1": 0.8302, "F1_std": 0.0352, "Recall": 0.9309, "Precision": 0.7525, "ROC_AUC": 0.981, "Accuracy": 0.9402}, {"Modelo": "Stacking", "Estrategia": "Sin balanceo", "F1": 0.8239, "F1_std": 0.0645, "Recall": 0.7881, "Precision": 0.8688, "ROC_AUC": 0.9826, "Accuracy": 0.9482}, {"Modelo": "Bagging", "Estrategia": "SMOTENC", "F1": 0.8189, "F1_std": 0.045, "Recall": 0.8314, "Precision": 0.8105, "ROC_AUC": 0.9659, "Accuracy": 0.9426}, {"Modelo": "Bagging", "Estrategia": "Sin balanceo", "F1": 0.8121, "F1_std": 0.0477, "Recall": 0.7626, "Precision": 0.8754, "ROC_AUC": 0.9686, "Accuracy": 0.9454}, {"Modelo": "Red neuronal (MLP)", "Estrategia": "Submuestreo", "F1": 0.8006, "F1_std": 0.0453, "Recall": 0.9668, "Precision": 0.6854, "ROC_AUC": 0.9779, "Accuracy": 0.9239}, {"Modelo": "Árbol de decisión", "Estrategia": "Sin balanceo", "F1": 0.7938, "F1_std": 0.0432, "Recall": 0.7904, "Precision": 0.8039, "ROC_AUC": 0.9014, "Accuracy": 0.9363}, {"Modelo": "KNN", "Estrategia": "SMOTENC", "F1": 0.793, "F1_std": 0.0608, "Recall": 0.8979, "Precision": 0.7139, "ROC_AUC": 0.9536, "Accuracy": 0.9262}, {"Modelo": "Árbol de decisión", "Estrategia": "class_weight", "F1": 0.7929, "F1_std": 0.0597, "Recall": 0.8212, "Precision": 0.7711, "ROC_AUC": 0.8917, "Accuracy": 0.9327}, {"Modelo": "KNN", "Estrategia": "Sin balanceo", "F1": 0.7886, "F1_std": 0.058, "Recall": 0.7649, "Precision": 0.8208, "ROC_AUC": 0.9572, "Accuracy": 0.9366}, {"Modelo": "Random Forest", "Estrategia": "Submuestreo", "F1": 0.7789, "F1_std": 0.0473, "Recall": 0.949, "Precision": 0.6635, "ROC_AUC": 0.9718, "Accuracy": 0.9151}, {"Modelo": "Gradient Boosting", "Estrategia": "SMOTENC", "F1": 0.7754, "F1_std": 0.0629, "Recall": 0.8878, "Precision": 0.6936, "ROC_AUC": 0.9691, "Accuracy": 0.9183}, {"Modelo": "Stacking", "Estrategia": "Submuestreo", "F1": 0.7744, "F1_std": 0.049, "Recall": 0.9565, "Precision": 0.6533, "ROC_AUC": 0.9738, "Accuracy": 0.9119}, {"Modelo": "Árbol de decisión", "Estrategia": "SMOTENC", "F1": 0.7605, "F1_std": 0.0442, "Recall": 0.8059, "Precision": 0.7272, "ROC_AUC": 0.8869, "Accuracy": 0.9207}, {"Modelo": "Bagging", "Estrategia": "Submuestreo", "F1": 0.7588, "F1_std": 0.0548, "Recall": 0.8982, "Precision": 0.662, "ROC_AUC": 0.9561, "Accuracy": 0.9092}, {"Modelo": "Gradient Boosting", "Estrategia": "Sin balanceo", "F1": 0.747, "F1_std": 0.0844, "Recall": 0.6837, "Precision": 0.8338, "ROC_AUC": 0.9704, "Accuracy": 0.9279}, {"Modelo": "Gradient Boosting", "Estrategia": "Submuestreo", "F1": 0.7354, "F1_std": 0.0485, "Recall": 0.9261, "Precision": 0.6135, "ROC_AUC": 0.9633, "Accuracy": 0.8952}, {"Modelo": "SVM", "Estrategia": "SMOTENC", "F1": 0.7346, "F1_std": 0.0662, "Recall": 0.9365, "Precision": 0.6072, "ROC_AUC": 0.9687, "Accuracy": 0.8929}, {"Modelo": "KNN", "Estrategia": "Submuestreo", "F1": 0.7099, "F1_std": 0.0461, "Recall": 0.9386, "Precision": 0.5727, "ROC_AUC": 0.9587, "Accuracy": 0.8793}, {"Modelo": "SVM", "Estrategia": "class_weight", "F1": 0.7074, "F1_std": 0.0653, "Recall": 0.9236, "Precision": 0.5764, "ROC_AUC": 0.966, "Accuracy": 0.8797}, {"Modelo": "Árbol de decisión", "Estrategia": "Submuestreo", "F1": 0.6855, "F1_std": 0.0629, "Recall": 0.8748, "Precision": 0.5671, "ROC_AUC": 0.879, "Accuracy": 0.873}, {"Modelo": "AdaBoost", "Estrategia": "SMOTENC", "F1": 0.6792, "F1_std": 0.0593, "Recall": 0.8827, "Precision": 0.557, "ROC_AUC": 0.947, "Accuracy": 0.8685}, {"Modelo": "AdaBoost", "Estrategia": "Submuestreo", "F1": 0.6521, "F1_std": 0.0724, "Recall": 0.8952, "Precision": 0.5154, "ROC_AUC": 0.9427, "Accuracy": 0.8486}, {"Modelo": "SVM", "Estrategia": "Submuestreo", "F1": 0.633, "F1_std": 0.0609, "Recall": 0.9106, "Precision": 0.4874, "ROC_AUC": 0.9465, "Accuracy": 0.8339}, {"Modelo": "AdaBoost", "Estrategia": "Sin balanceo", "F1": 0.6011, "F1_std": 0.1062, "Recall": 0.4609, "Precision": 0.8987, "ROC_AUC": 0.9424, "Accuracy": 0.9076}, {"Modelo": "SVM", "Estrategia": "Sin balanceo", "F1": 0.5974, "F1_std": 0.0859, "Recall": 0.4461, "Precision": 0.9244, "ROC_AUC": 0.9549, "Accuracy": 0.9076}, {"Modelo": "Regresión logística", "Estrategia": "class_weight", "F1": 0.5959, "F1_std": 0.0647, "Recall": 0.8779, "Precision": 0.4536, "ROC_AUC": 0.9252, "Accuracy": 0.8129}, {"Modelo": "Regresión logística", "Estrategia": "Submuestreo", "F1": 0.5892, "F1_std": 0.0748, "Recall": 0.8625, "Precision": 0.4505, "ROC_AUC": 0.9233, "Accuracy": 0.8108}, {"Modelo": "SVM lineal", "Estrategia": "class_weight", "F1": 0.5838, "F1_std": 0.0643, "Recall": 0.883, "Precision": 0.438, "ROC_AUC": 0.925, "Accuracy": 0.8021}, {"Modelo": "Regresión logística", "Estrategia": "SMOTENC", "F1": 0.5831, "F1_std": 0.0656, "Recall": 0.8601, "Precision": 0.4432, "ROC_AUC": 0.9237, "Accuracy": 0.8073}, {"Modelo": "SVM lineal", "Estrategia": "Submuestreo", "F1": 0.5804, "F1_std": 0.0712, "Recall": 0.8727, "Precision": 0.4375, "ROC_AUC": 0.9236, "Accuracy": 0.8017}, {"Modelo": "SVM lineal", "Estrategia": "SMOTENC", "F1": 0.5767, "F1_std": 0.064, "Recall": 0.8703, "Precision": 0.4334, "ROC_AUC": 0.9225, "Accuracy": 0.7993}, {"Modelo": "Regresión logística", "Estrategia": "Sin balanceo", "F1": 0.5729, "F1_std": 0.0817, "Recall": 0.4335, "Precision": 0.8673, "ROC_AUC": 0.9246, "Accuracy": 0.9004}, {"Modelo": "SVM lineal", "Estrategia": "Sin balanceo", "F1": 0.5637, "F1_std": 0.0865, "Recall": 0.413, "Precision": 0.9088, "ROC_AUC": 0.9246, "Accuracy": 0.9016}, {"Modelo": "Naive Bayes", "Estrategia": "Sin balanceo", "F1": 0.5184, "F1_std": 0.0472, "Recall": 0.921, "Precision": 0.3615, "ROC_AUC": 0.8879, "Accuracy": 0.7312}, {"Modelo": "Naive Bayes", "Estrategia": "Submuestreo", "F1": 0.4777, "F1_std": 0.0353, "Recall": 0.9312, "Precision": 0.3217, "ROC_AUC": 0.889, "Accuracy": 0.681}, {"Modelo": "Naive Bayes", "Estrategia": "SMOTENC", "F1": 0.4592, "F1_std": 0.0341, "Recall": 0.9338, "Precision": 0.3048, "ROC_AUC": 0.887, "Accuracy": 0.6556}], "candidatos": [{"Modelo": "Stacking", "Estrategia": "SMOTENC", "F1": 0.8617, "F1_std": 0.0509}, {"Modelo": "Random Forest", "Estrategia": "class_weight", "F1": 0.8581, "F1_std": 0.0471}, {"Modelo": "Red neuronal (MLP)", "Estrategia": "Sin balanceo", "F1": 0.8378, "F1_std": 0.0323}], "anidado": [{"Modelo": "Stacking", "Estrategia": "SMOTENC", "F1_03": 0.8617, "F1_con_seleccion": 0.8603, "F1_anidado": 0.8485, "Umbral": 0.34}, {"Modelo": "Random Forest", "Estrategia": "class_weight", "F1_03": 0.8581, "F1_con_seleccion": 0.8596, "F1_anidado": 0.8509, "Umbral": 0.37}, {"Modelo": "Red neuronal (MLP)", "Estrategia": "Sin balanceo", "F1_03": 0.8378, "F1_con_seleccion": 0.8585, "F1_anidado": 0.8395, "Umbral": 0.35}], "priorizacion": [{"Fraccion_contactada": 0.05, "Clientes": 32, "Precision": 1.0, "Recall": 0.3107, "Lift": 6.2039}, {"Fraccion_contactada": 0.1, "Clientes": 64, "Precision": 0.9531, "Recall": 0.5922, "Lift": 5.9131}, {"Fraccion_contactada": 0.2, "Clientes": 128, "Precision": 0.7578, "Recall": 0.9417, "Lift": 4.7014}, {"Fraccion_contactada": 0.3, "Clientes": 192, "Precision": 0.526, "Recall": 0.9806, "Lift": 3.2635}], "estres": [{"ROC_AUC": 0.9817, "Precision_promedio": 0.8909, "F1_umbral_0_5": 0.8592, "Agrupacion": "Perfiles idénticos (la del proyecto)", "Grupos": 2255}, {"ROC_AUC": 0.9715, "Precision_promedio": 0.8431, "F1_umbral_0_5": 0.8113, "Agrupacion": "Rangos gruesos (más estricta)", "Grupos": 1299}], "permutadas": [{"ROC_AUC": 0.9817, "Precision_promedio": 0.8909, "F1_umbral_0_5": 0.8592, "Etiquetas": "Reales"}, {"ROC_AUC": 0.4925, "Precision_promedio": 0.1531, "F1_umbral_0_5": 0.1474, "Etiquetas": "Mezcladas"}], "train_n": 2511, "test_n": 639, "train_aband": 392, "test_aband": 103};
+</script>
+<script>
+(function(){
+'use strict';
+const D = window.DATOS;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function el(tag, attrs, parent, text){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); if (text !== undefined) e.textContent = text; return e; }
+const f3 = (x, d) => x.toFixed(d === undefined ? 3 : d).replace('.', ',');
+const pc = (x, d) => (x * 100).toFixed(d === undefined ? 1 : d).replace('.', ',') + '%';
+const C = {coal:'#0B1B33', slate:'#334155', mute:'#5B6B82', amber:'#F59E0B', amberd:'#B45309', blue:'#1E40AF', danger:'#DC2626', ok:'#0F8B7A', p2:'#E6ECF5', p3:'#CBD6E6'};
+
+/* ---------- escena, escala y navegación ---------- */
+const stage = $('#stage'); let escala = 1;
+function ajustar(){ escala = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = 'translate(-50%,-50%) scale(' + escala + ')'; }
+addEventListener('resize', ajustar); ajustar();
+
+const slides = $$('.slide');
+let actual = -1, anim = null;
+const enter = {}, leave = {};
+
+const NOTAS = [
+ "<b>Portada (30 s).</b> Presentarnos. Las dos líneas son el uso mensual de un cliente que se queda y el de uno que se va: la pregunta es si se puede ver la diferencia antes de que ocurra.",
+ "<b>El problema (1 min).</b> Una empresa de telecomunicaciones no puede llamar a todos sus clientes. Con nueve meses de uso queremos decir quién abandonará en el mes doce para llamar primero a esos. Es clasificación binaria.",
+ "<b>Los datos (1 min).</b> Dataset de UCI (Iranian Churn): 3.150 clientes y 495 abandonos. Usamos 11 variables; Status y Customer Value quedaron fuera porque no se sabe cuándo se miden y podrían filtrar el desenlace. Edad es función exacta del grupo de edad.",
+ "<b>El reto (1 min).</b> Solo el 15,7% abandona: decir siempre «permanece» acierta el 84% y no detecta a nadie. Por eso la métrica es el F1 de la clase que abandona.",
+ "<b>EDA (1,5 min).</b> El 83% de quienes se quejaron abandonó frente al 10% de quienes no. Con phik, quejas es la variable más ligada (0,75), seguida de segundos de uso y número de llamadas.",
+ "<b>Controles (1,5 min).</b> Un F1 alto exige desconfiar. Probamos: archivos idénticos al original, cero perfiles repetidos entre entrenamiento y prueba, etiquetas mezcladas (AUC cae a 0,49) y agrupación estricta de clientes parecidos (el F1 baja de 0,86 a 0,81 pero se mantiene).",
+ "<b>Comparación (1,5 min).</b> 12 modelos × 4 estrategias. Cambien de métrica con los botones. Los lineales quedan entre 0,46 y 0,60; Stacking con SMOTENC y Random Forest rondan 0,86.",
+ "<b>Lineal contra no lineal (1 min).</b> La señal está en la interacción: queja y poco uso juntos. Un modelo lineal suma efectos; los árboles combinan condiciones. La matriz de la derecha lo muestra.",
+ "<b>Estimación honesta (1 min).</b> La validación con selección es optimista; la anidada da 0,85 y la prueba 0,857 con un intervalo del 95% entre 0,80 y 0,91. El control con grupos estrictos da 0,81. Por eso decimos «entre 0,81 y 0,86», no un número exacto.",
+ "<b>Umbral y calibración (1 min).</b> Mover el deslizador: con umbral bajo detectamos todo pero con muchas falsas alarmas. Elegimos 0,37 con validación cruzada sobre entrenamiento, nunca con prueba.",
+ "<b>Resultado en prueba (1 min).</b> De 103 abandonos detectamos 90; hubo 17 falsas alarmas entre 536 clientes que se quedaron. Visto una sola vez.",
+ "<b>Priorizar (1,5 min).</b> Mover el deslizador: contactando al 10% con mayor riesgo, el 95% de las llamadas acierta y se cubre el 59% de los abandonos. Probar «Cliente real al azar».",
+ "<b>Conclusiones (1 min).</b> Es una herramienta para ordenar clientes, no una certeza. Limitaciones: sin fechas, un solo operador, perfiles parecidos.",
+ "<b>Cierre (30 s).</b> Agradecer y abrir preguntas."
+];
+
+function mostrarNotas(){ $('#notes').innerHTML = NOTAS[actual] || ''; }
+function frags(s){ return $$('.frag', s); }
+function mostrarTodos(s){ frags(s).forEach(f => f.classList.add('show')); }
+function irA(i, desdeAtras){
+  i = Math.max(0, Math.min(slides.length - 1, i));
+  if (i === actual) return;
+  if (leave[actual]) leave[actual]();
+  slides.forEach((s, k) => s.classList.toggle('active', k === i));
+  actual = i;
+  const s = slides[i];
+  if (desdeAtras || reducido) mostrarTodos(s); else frags(s).forEach(f => f.classList.remove('show'));
+  $('#pos').textContent = (i + 1) + ' / ' + slides.length;
+  $('#progress').style.width = ((i + 1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (i + 1));
+  mostrarNotas();
+  if (enter[i]) enter[i]();
+  $$('#overview .card').forEach((c, k) => c.classList.toggle('cur', k === i));
+  iniciarCrono();
+}
+function siguiente(){
+  const s = slides[actual], ocultos = frags(s).filter(f => !f.classList.contains('show'));
+  if (ocultos.length){ ocultos[0].classList.add('show'); return; }
+  irA(actual + 1);
+}
+function anterior(){
+  const s = slides[actual], visibles = frags(s).filter(f => f.classList.contains('show'));
+  if (visibles.length){ visibles[visibles.length - 1].classList.remove('show'); return; }
+  irA(actual - 1, true);
+}
+$('#bNext').onclick = siguiente; $('#bPrev').onclick = anterior;
+$('#bFull').onclick = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
+function alternarNotas(){ const n = $('#notes'); n.style.display = n.style.display === 'block' ? 'none' : 'block'; }
+$('#bNotes').onclick = alternarNotas;
+function alternarVista(){ const o = $('#overview'); o.style.display = o.style.display === 'block' ? 'none' : 'block'; }
+$('#bOv').onclick = alternarVista;
+slides.forEach((s, k) => { const c = document.createElement('div'); c.className = 'card'; c.innerHTML = '<small>' + (k + 1) + '</small>' + s.dataset.title; c.onclick = () => { $('#overview').style.display = 'none'; irA(k); mostrarTodos(slides[k]); }; $('#ovgrid').appendChild(c); });
+
+let t0 = null, crono = null;
+function iniciarCrono(){ if (t0 === null){ t0 = Date.now(); crono = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $('#timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 500); } }
+addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+  const k = e.key;
+  if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter'){ e.preventDefault(); if ($('#overview').style.display !== 'block') siguiente(); }
+  else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace'){ e.preventDefault(); anterior(); }
+  else if (k === 'Home') irA(0);
+  else if (k === 'End') irA(slides.length - 1);
+  else if (k === 'f' || k === 'F') $('#bFull').click();
+  else if (k === 'n' || k === 'N') alternarNotas();
+  else if (k === 'o' || k === 'O' || k === 'Escape'){ if (k === 'Escape') $('#overview').style.display = 'none'; else alternarVista(); }
+  else if (k === 't' || k === 'T'){ const t = $('#timer'); t.style.display = t.style.display === 'block' ? 'none' : 'block'; iniciarCrono(); }
+});
+let tx = null;
+addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 60){ dx < 0 ? siguiente() : anterior(); } tx = null; }, {passive:true});
+setTimeout(() => { $('#hint').style.opacity = 0; }, 5000);
+
+/* ---------- utilidades de animación ---------- */
+function contar(nodo, hasta, dur, dec, sufijo){
+  const dar = v => (dec ? f3(v, dec) : miles(Math.round(v))) + (sufijo || '');
+  if (reducido){ nodo.textContent = dar(hasta); return; }
+  const ini = performance.now();
+  function paso(t){ const p = Math.max(0, Math.min(1, (t - ini) / dur)), e = 1 - Math.pow(1 - p, 3); nodo.textContent = dar(hasta * e); if (p < 1) requestAnimationFrame(paso); }
+  requestAnimationFrame(paso);
+}
+function miles(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+const tip = $('#tip');
+function verTip(ev, html){ tip.innerHTML = html; tip.style.display = 'block'; tip.style.fontSize = Math.max(14, 20 * escala) + 'px'; const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 16, y = ev.clientY + 16; if (x + w > innerWidth - 8) x = ev.clientX - w - 16; if (y + h > innerHeight - 8) y = ev.clientY - h - 16; tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function ocultarTip(){ tip.style.display = 'none'; }
+function lim(svg){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+/* ---------- 1 portada: uso de un cliente que se queda frente a uno que se va ---------- */
+(function(){
+  const cv = $('#sismo'), cx = cv.getContext('2d'), W = 1920, H = 520;
+  let progreso = 0, enMarcha = false, ultimo = 0;
+  function nivel(i, se_va){
+    // curva de uso mensual: estable para quien se queda; cae después del mes 9 para quien se va
+    const x = i / 1000, ruido = Math.sin(i * .11) * 9 + Math.sin(i * .37) * 5 + Math.sin(i * .83) * 3;
+    const base = se_va ? (x < .72 ? 330 + ruido : 330 - Math.pow((x - .72) / .28, 1.6) * 250 + ruido * .6) : 340 + ruido * .8;
+    return base;
+  }
+  function dibujar(){
+    cx.clearRect(0, 0, W, H);
+    cx.strokeStyle = 'rgba(143,163,194,.35)'; cx.lineWidth = 2; cx.setLineDash([10, 10]);
+    const xCorte = 1920 * .72; cx.beginPath(); cx.moveTo(xCorte, 40); cx.lineTo(xCorte, 480); cx.stroke(); cx.setLineDash([]);
+    cx.fillStyle = '#8FA3C2'; cx.font = '24px "Fira Sans", sans-serif';
+    cx.fillText('mes 9', xCorte - 80, 36); cx.fillText('mes 12', 1920 - 160, 36);
+    const n = Math.floor(progreso * 1000);
+    [[false, 'rgba(184,196,216,.9)', 'se queda'], [true, '#F59E0B', 'se va']].forEach(par => {
+      cx.strokeStyle = par[1]; cx.lineWidth = 4; cx.lineJoin = 'round'; cx.beginPath();
+      for (let i = 0; i <= n; i++){ const x = i / 1000 * (W - 120) + 60, y = 520 - nivel(i, par[0]) - 40; if (i === 0) cx.moveTo(x, y); else cx.lineTo(x, y); }
+      cx.stroke();
+      if (n > 5){ const x = n / 1000 * (W - 120) + 60, y = 520 - nivel(n, par[0]) - 40; cx.fillStyle = par[1]; cx.beginPath(); cx.arc(x, y, 8, 0, 6.3); cx.fill(); }
+    });
+    cx.fillStyle = 'rgba(184,196,216,.9)'; cx.fillText('cliente que se queda', 80, 130);
+    cx.fillStyle = '#F59E0B'; cx.fillText('cliente que se va', 80, 166);
+  }
+  function bucle(t){ if (!enMarcha) return; if (!ultimo) ultimo = t; progreso = Math.min(1, progreso + (t - ultimo) / 5200); ultimo = t; dibujar(); if (progreso < 1) requestAnimationFrame(bucle); }
+  enter[0] = function(){ progreso = reducido ? 1 : 0; ultimo = 0; enMarcha = true; dibujar(); if (!reducido) requestAnimationFrame(bucle); };
+  leave[0] = function(){ enMarcha = false; };
+})();
+
+/* ---------- 3 datos ---------- */
+const GRUPOS = [
+ {n:'Uso del servicio', s:'segundos · llamadas · mensajes', v:['segundos_uso','frecuencia_uso','frecuencia_sms','numeros_distintos','fallas_llamadas'], t:'Cuánto y cómo usa el servicio durante los primeros nueve meses: segundos de llamadas, número de llamadas y de mensajes, números distintos a los que llama y llamadas fallidas.'},
+ {n:'Cuenta', s:'antigüedad · cargo · plan', v:['antiguedad','nivel_cargo','plan_tarifario'], t:'Meses de suscripción, nivel de cargo (de 0 a 9, no son unidades monetarias; hay siete clientes con nivel 10 que se conservaron) y plan tarifario (pago por uso o contractual).'},
+ {n:'Quejas', s:'quejas', v:['quejas'], t:'Si el cliente presentó una queja. Es 0 o 1: no cuenta cuántas. Es la variable más relacionada con el abandono (phik de 0,75).'},
+ {n:'Perfil', s:'grupo de edad · edad', v:['grupo_edad','edad'], t:'El grupo de edad de 1 a 5 y la edad, que en estos datos es una función exacta del grupo (solo cinco valores): no se interpreta como edad exacta.'},
+ {n:'Dejadas fuera', s:'Status · Customer Value', v:['Status','Customer Value'], t:'Status (activo o no activo) y Customer Value (valor calculado) no tienen definición ni momento de captura claros, así que podrían filtrar el desenlace. No se usaron, y no se reintrodujeron para mejorar el F1.', fuera:true}
+];
+enter[2] = function(){
+  contar($('#n1'), 3150, 1200, 0); contar($('#n2'), 11, 900, 0); contar($('#n3'), 495, 1100, 0);
+  const cont = $('#grupos'); cont.innerHTML = '';
+  GRUPOS.forEach((g, k) => {
+    const b = document.createElement('button'); b.className = 'grupo' + (k === 2 ? ' sel' : ''); b.setAttribute('role', 'tab');
+    b.innerHTML = '<b>' + g.n + '</b><span>' + g.s + '</span>';
+    b.onclick = () => { $$('.grupo').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); detalle(k); };
+    cont.appendChild(b);
+  });
+  detalle(2);
+};
+function detalle(k){
+  const g = GRUPOS[k]; let chips = '';
+  g.v.forEach(v => { chips += '<span class="vchip' + (g.fuera ? '' : ' use') + '">' + v + '</span>'; });
+  $('#detalle').innerHTML = '<h3 style="margin-bottom:14px;font-size:50px">' + g.n + '</h3><p>' + g.t + '</p><div style="margin-top:22px">' + chips + '</div>';
+}
+
+/* ---------- 4 reto ---------- */
+(function(){
+  const dots = $('#dots'); const aband = [2,9,14,23,31,38,46,52,57,63,69,75,81,88,93,97];
+  for (let i = 0; i < 100; i++){ const d = document.createElement('i'); dots.appendChild(d); }
+  const puntos = $$('#dots i');
+  function reset(){ puntos.forEach(p => { p.className = ''; }); $('#acc0').textContent = '84,4%'; $('#det0').textContent = '0'; }
+  enter[3] = function(){ reset(); puntos.forEach((p, i) => setTimeout(() => { if (aband.indexOf(i) >= 0) p.classList.add('p'); }, reducido ? 0 : 18 * i)); };
+  $('#bSiempre').onclick = function(){ puntos.forEach((p, i) => setTimeout(() => { p.classList.remove('p'); p.classList.add(aband.indexOf(i) >= 0 ? 'mis' : 'ok'); }, reducido ? 0 : 14 * i)); };
+  $('#bReset').onclick = function(){ reset(); puntos.forEach((p, i) => { if (aband.indexOf(i) >= 0) p.classList.add('p'); }); };
+})();
+
+/* ---------- 5 EDA ---------- */
+function barras(cont, filas, max, fmt){
+  cont.innerHTML = '';
+  filas.forEach(f => { const w = document.createElement('div'); w.innerHTML = '<div class="barlab"><span>' + f[0] + '</span><b>' + fmt(f[1]) + '</b></div><div class="bar ' + (f[2] || '') + '"><i style="width:0"></i></div>'; cont.appendChild(w); });
+  setTimeout(() => { $$('.bar i', cont).forEach((b, i) => { b.style.width = (filas[i][1] / max * 100) + '%'; }); }, reducido ? 0 : 150);
+}
+enter[4] = function(){
+  const q = D.quejas;
+  barras($('#eda1'), [['Presentó una queja', q['1'].tasa * 100, 'am'], ['No presentó ninguna queja', q['0'].tasa * 100, '']], 100, v => f3(v, 1) + '%');
+  const nombres = {quejas:'quejas', segundos_uso:'segundos de uso', frecuencia_uso:'número de llamadas', frecuencia_sms:'número de mensajes', antiguedad:'antigüedad', nivel_cargo:'nivel de cargo', numeros_distintos:'números distintos', fallas_llamadas:'llamadas fallidas', plan_tarifario:'plan tarifario', grupo_edad:'grupo de edad', edad:'edad'};
+  const filas = []; D.phik.slice(0, 7).forEach(p => filas.push([nombres[p[0]] || p[0], p[1], p[0] === 'quejas' ? 'am' : '']));
+  barras($('#eda2'), filas, 0.8, v => f3(v, 3));
+};
+
+/* ---------- 6 trampas ---------- */
+enter[5] = function(){
+  const pasos = $$('#flow .step'); pasos.forEach(p => p.classList.remove('on'));
+  pasos.forEach((p, i) => setTimeout(() => p.classList.add('on'), reducido ? 0 : 450 * (i + 1)));
+  const perm = D.permutadas, est = D.estres;
+  let aucR = 0, aucM = 0; perm.forEach(f => { if (f.Etiquetas === 'Reales') aucR = f.ROC_AUC; else aucM = f.ROC_AUC; });
+  contar($('#aucReal'), aucR, 1100, 3); contar($('#aucMezc'), aucM, 1100, 3);
+  contar($('#f1Exacta'), est[0].F1_umbral_0_5, 1100, 3); contar($('#f1Estricta'), est[1].F1_umbral_0_5, 1300, 3);
+};
+
+/* ---------- 7 heatmap ---------- */
+const ESTR = ['Sin balanceo', 'class_weight', 'SMOTENC', 'Submuestreo'];
+const METS = [['F1', 'F1'], ['Recall', 'Recall'], ['Precision', 'Precisión'], ['ROC_AUC', 'ROC AUC']];
+let metActual = 'F1';
+const modelosOrden = []; D.comparacion.forEach(f => { if (modelosOrden.indexOf(f.Modelo) < 0) modelosOrden.push(f.Modelo); });
+const top3 = []; D.candidatos.forEach(c => top3.push(c));
+function celda(m, e){ for (let i = 0; i < D.comparacion.length; i++){ const f = D.comparacion[i]; if (f.Modelo === m && f.Estrategia === e) return f; } return null; }
+function mezcla(t){ const a = [230, 236, 245], b = [30, 64, 175]; return 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',') + ')'; }
+function dibujarHeat(animar){
+  const svg = $('#svgHeat'); lim(svg); const x0 = 270, y0 = 54, cw = 205, ch = 44; let vmin = 9, vmax = 0;
+  D.comparacion.forEach(f => { vmin = Math.min(vmin, f[metActual]); vmax = Math.max(vmax, f[metActual]); });
+  ESTR.forEach((e, j) => el('text', {x:x0 + j * cw + cw / 2, y:38, 'text-anchor':'middle', 'font-size':25, 'font-weight':600, fill:C.coal}, svg, e));
+  modelosOrden.forEach((m, i) => {
+    el('text', {x:x0 - 16, y:y0 + i * ch + ch / 2 + 8, 'text-anchor':'end', 'font-size':25, fill:C.coal}, svg, m);
+    ESTR.forEach((e, j) => {
+      const f = celda(m, e), g = el('g', {opacity: animar && !reducido ? 0 : 1}, svg), x = x0 + j * cw + 3, y = y0 + i * ch + 3;
+      if (!f){ el('rect', {x, y, width:cw - 6, height:ch - 6, rx:5, fill:'none', stroke:C.p3, 'stroke-width':2, 'stroke-dasharray':'6 6'}, g); el('text', {x:x + (cw - 6) / 2, y:y + ch / 2 + 4, 'text-anchor':'middle', 'font-size':24, fill:C.p3}, g, '—'); }
+      else {
+        const t = (f[metActual] - vmin) / (vmax - vmin), r = el('rect', {x, y, width:cw - 6, height:ch - 6, rx:5, fill:mezcla(t)}, g);
+        el('text', {x:x + (cw - 6) / 2, y:y + ch / 2 + 5, 'text-anchor':'middle', 'font-size':25, 'font-weight':600, fill: t > .5 ? '#fff' : C.coal}, g, f3(f[metActual], 2));
+        r.addEventListener('mousemove', ev => verTip(ev, '<b>' + f.Modelo + '</b> · ' + f.Estrategia + '<br>F1 ' + f3(f.F1) + ' ± ' + f3(f.F1_std) + '<br>Recall ' + f3(f.Recall) + ' · Precisión ' + f3(f.Precision) + '<br>ROC AUC ' + f3(f.ROC_AUC) + ' · Accuracy ' + f3(f.Accuracy)));
+        r.addEventListener('mouseleave', ocultarTip);
+        let esTop = false; top3.forEach(t3 => { if (t3.Modelo === m && t3.Estrategia === e) esTop = true; });
+        if (esTop) el('rect', {x:x - 1, y:y - 1, width:cw - 4, height:ch - 4, rx:6, fill:'none', stroke:C.amber, 'stroke-width':5, 'pointer-events':'none'}, g);
+      }
+      if (animar && !reducido) setTimeout(() => g.setAttribute('opacity', 1), 40 * i + 25 * j);
+    });
+  });
+  el('rect', {x:x0, y:y0 + 12 * ch + 8, width:26, height:18, rx:3, fill:'none', stroke:C.amber, 'stroke-width':4}, svg);
+  el('text', {x:x0 + 38, y:y0 + 12 * ch + 23, 'font-size':22, fill:C.mute}, svg, 'los 3 candidatos que pasaron al ajuste');
+}
+(function(){ const cont = $('#metBtns'); METS.forEach(m => { const b = document.createElement('button'); b.className = 'btn' + (m[0] === metActual ? ' sel' : ''); b.style.fontSize = '24px'; b.style.padding = '8px 20px'; b.textContent = m[1]; b.onclick = () => { metActual = m[0]; $$('#metBtns .btn').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); dibujarHeat(false); }; cont.appendChild(b); }); })();
+enter[6] = function(){
+  metActual = 'F1'; $$('#metBtns .btn').forEach((b, i) => b.classList.toggle('sel', i === 0)); dibujarHeat(true);
+  let lin = 0, arb = 0;
+  D.comparacion.forEach(f => { if (['Regresión logística', 'SVM lineal', 'Naive Bayes'].indexOf(f.Modelo) >= 0) lin = Math.max(lin, f.F1); if (['Stacking', 'Random Forest'].indexOf(f.Modelo) >= 0) arb = Math.max(arb, f.F1); });
+  contar($('#f1lin'), lin, 1000, 3); contar($('#f1arb'), arb, 1300, 3);
+};
+
+/* ---------- 8 lineal vs no lineal ---------- */
+const FAMILIA = {'Regresión logística':'Lineal', 'SVM lineal':'Lineal', 'Naive Bayes':'Lineal', 'KNN':'Vecinos', 'SVM':'Kernel', 'Árbol de decisión':'Árboles', 'Random Forest':'Árboles', 'Bagging':'Árboles', 'AdaBoost':'Árboles', 'Gradient Boosting':'Árboles', 'Stacking':'Ensamble', 'Red neuronal (MLP)':'Red neuronal'};
+const COL_FAM = {'Lineal':C.danger, 'Vecinos':C.slate, 'Kernel':C.mute, 'Árboles':C.blue, 'Ensamble':C.amber, 'Red neuronal':'#6D28D9'};
+enter[7] = function(){
+  const svg = $('#svgFam'); lim(svg); const x0 = 300, ancho = 640, X = v => x0 + v / 1 * ancho;
+  const mejor = []; modelosOrden.forEach(m => { const f = D.comparacion.filter(r => r.Modelo === m)[0]; mejor.push(f); });
+  mejor.sort((a, b) => b.F1 - a.F1);
+  [0, .25, .5, .75, 1].forEach(v => { el('line', {x1:X(v), x2:X(v), y1:10, y2:560, stroke:C.p3, 'stroke-width':1.2}, svg); el('text', {x:X(v), y:592, 'text-anchor':'middle', 'font-size':21, fill:C.mute}, svg, f3(v, 2)); });
+  mejor.forEach((f, i) => {
+    const y = 20 + i * 46, fam = FAMILIA[f.Modelo];
+    el('text', {x:x0 - 14, y:y + 24, 'text-anchor':'end', 'font-size':23, fill:C.coal}, svg, f.Modelo);
+    const r = el('rect', {x:x0, y:y + 4, width:0, height:30, rx:4, fill:COL_FAM[fam]}, svg);
+    el('text', {x:X(f.F1) + 10, y:y + 26, 'font-size':22, 'font-weight':600, fill:C.coal}, svg, f3(f.F1, 2));
+    r.addEventListener('mousemove', ev => verTip(ev, '<b>' + f.Modelo + '</b> · ' + f.Estrategia + '<br>Familia: ' + fam + '<br>F1 ' + f3(f.F1) + ' ± ' + f3(f.F1_std)));
+    r.addEventListener('mouseleave', ocultarTip);
+    setTimeout(() => { r.style.transition = 'width .9s cubic-bezier(.2,.8,.2,1)'; r.setAttribute('width', f.F1 * ancho); }, reducido ? 0 : 200 + i * 60);
+  });
+  let lx = 40, ly = 604; Object.keys(COL_FAM).forEach(k => { el('rect', {x:lx, y:ly - 14, width:18, height:18, rx:3, fill:COL_FAM[k]}, svg); el('text', {x:lx + 26, y:ly, 'font-size':19, fill:C.slate}, svg, k); lx += 26 + k.length * 12 + 36; });
+
+  const sc = $('#svgCruce'); lim(sc); const usos = ['bajo (0-19)', 'medio (20-60)', 'alto (61+)'], etiquetas = ['Poco uso (0-19 llamadas)', 'Uso medio (20-60)', 'Mucho uso (61+)'];
+  etiquetas.forEach((u, j) => el('text', {x:230 + j * 150 + 70, y:28, 'text-anchor':'middle', 'font-size':19, fill:C.slate}, sc, u.split(' (')[0]));
+  [1, 0].forEach((qv, i) => {
+    el('text', {x:215, y:90 + i * 90, 'text-anchor':'end', 'font-size':23, 'font-weight':600, fill:C.coal}, sc, qv === 1 ? 'Con queja' : 'Sin queja');
+    usos.forEach((u, j) => {
+      const c = D.cruce_quejas_uso.filter(r => r.quejas === qv && r.uso === u)[0], t = c && c.tasa !== null ? c.tasa : 0;
+      const r = el('rect', {x:230 + j * 150, y:45 + i * 90, width:140, height:80, rx:8, fill:mezcla(t)}, sc);
+      el('text', {x:230 + j * 150 + 70, y:92 + i * 90, 'text-anchor':'middle', 'font-size':30, 'font-weight':700, fill: t > .5 ? '#fff' : C.coal}, sc, c && c.tasa !== null ? f3(c.tasa * 100, 0) + '%' : '—');
+      r.addEventListener('mousemove', ev => verTip(ev, (qv === 1 ? 'Con queja' : 'Sin queja') + ' · ' + etiquetas[j] + '<br>Abandona: ' + (c && c.tasa !== null ? f3(c.tasa * 100, 1) + '%' : '—') + '<br>Clientes: ' + (c ? c.n : 0)));
+      r.addEventListener('mouseleave', ocultarTip);
+    });
+  });
+};
+
+/* ---------- 9 estimación honesta ---------- */
+enter[8] = function(){
+  const svg = $('#svgIC'); lim(svg); const m = {l:360, r:50}, a = 0.70, b = 1.0, W = 1180;
+  const X = v => m.l + (v - a) / (b - a) * (W - m.l - m.r);
+  [.7, .75, .8, .85, .9, .95, 1].forEach(v => { el('line', {x1:X(v), x2:X(v), y1:20, y2:440, stroke:C.p3, 'stroke-width':1.2}, svg); el('text', {x:X(v), y:478, 'text-anchor':'middle', 'font-size':22, fill:C.mute}, svg, f3(v, 2)); });
+  const meta = D.meta, e = D.estres;
+  const filas = [
+    ['Validación con selección', 0.8596, null, null, C.danger, 'optimista: elegida con las mismas filas'],
+    ['Validación anidada', meta.metricas_anidadas_entrenamiento.F1, meta.metricas_anidadas_entrenamiento.F1 - meta.metricas_anidadas_entrenamiento.F1_desviacion, meta.metricas_anidadas_entrenamiento.F1 + meta.metricas_anidadas_entrenamiento.F1_desviacion, C.blue, '± una desviación entre particiones'],
+    ['Prueba (una sola vez)', meta.metricas_test.F1, meta.intervalos_bootstrap_test_95.F1[0], meta.intervalos_bootstrap_test_95.F1[1], C.amber, 'intervalo del 95 % por bootstrap de perfiles'],
+    ['Control con grupos estrictos', e[1].F1_umbral_0_5, null, null, C.slate, 'clientes parecidos siempre juntos'],
+  ];
+  filas.forEach((f, i) => {
+    const y = 70 + i * 100, g = el('g', {opacity: reducido ? 1 : 0}, svg);
+    el('text', {x:m.l - 18, y:y + 5, 'text-anchor':'end', 'font-size':25, 'font-weight':600, fill:C.coal}, g, f[0]);
+    el('text', {x:m.l - 18, y:y + 32, 'text-anchor':'end', 'font-size':18, fill:C.mute}, g, f[5]);
+    if (f[2] !== null) el('line', {x1:X(f[2]), x2:X(f[3]), y1:y, y2:y, stroke:f[4], 'stroke-width':10, 'stroke-linecap':'round', opacity:.55}, g);
+    el('circle', {cx:X(f[1]), cy:y, r:15, fill:f[4], stroke:'#fff', 'stroke-width':3}, g);
+    el('text', {x:X(f[1]), y:y - 26, 'text-anchor':'middle', 'font-size':26, 'font-weight':700, fill:C.coal}, g, f3(f[1], 3));
+    setTimeout(() => g.setAttribute('opacity', 1), reducido ? 0 : 300 + i * 350);
+  });
+};
+
+/* ---------- 10 umbral y calibración ---------- */
+(function(){
+  const m = {l:70, r:30, t:20, b:60}, W = 1020, H = 540, mx = .9;
+  const X = v => m.l + v / mx * (W - m.l - m.r), Y = v => H - m.b - v * (H - m.t - m.b);
+  let marca = null;
+  function trazo(clave, color, ancho){ let d = ''; D.umbrales.forEach((p, i) => { d += (i ? 'L' : 'M') + X(p.u) + ' ' + Y(p[clave]); }); return el('path', {d, fill:'none', stroke:color, 'stroke-width':ancho, 'stroke-linejoin':'round'}, $('#svgThr')); }
+  function base(){
+    const svg = $('#svgThr'); lim(svg);
+    [0, .2, .4, .6, .8, 1].forEach(v => { el('line', {x1:m.l, x2:W - m.r, y1:Y(v), y2:Y(v), stroke:C.p3, 'stroke-width':1.2}, svg); el('text', {x:m.l - 12, y:Y(v) + 7, 'text-anchor':'end', 'font-size':22, fill:C.mute}, svg, f3(v, 1)); });
+    [0, .2, .4, .6, .8].forEach(v => el('text', {x:X(v), y:H - m.b + 32, 'text-anchor':'middle', 'font-size':22, fill:C.mute}, svg, pc(v, 0)));
+    trazo('precision', C.slate, 5); trazo('recall', C.blue, 5); trazo('f1', C.amber, 8);
+    el('text', {x:X(.8), y:Y(.9), 'text-anchor':'end', 'font-size':23, fill:C.slate}, svg, 'precisión'); el('text', {x:X(.8), y:Y(.62), 'text-anchor':'end', 'font-size':23, fill:C.blue}, svg, 'recall'); el('text', {x:X(.25), y:Y(.93), 'text-anchor':'middle', 'font-size':23, fill:C.amberd, 'font-weight':600}, svg, 'F1');
+    el('line', {x1:X(D.umbral), x2:X(D.umbral), y1:m.t, y2:H - m.b, stroke:C.amber, 'stroke-width':2, 'stroke-dasharray':'4 6'}, svg); marca = el('g', {}, svg);
+  }
+  function actualizar(){
+    const u = parseInt($('#uSl').value, 10), d = D.umbrales[u - 1]; $('#uVal').textContent = u + '%';
+    const g = marca; while (g.firstChild) g.removeChild(g.firstChild);
+    el('line', {x1:X(d.u), x2:X(d.u), y1:m.t, y2:H - m.b, stroke:C.coal, 'stroke-width':3}, g);
+    [['f1', C.amber], ['recall', C.blue], ['precision', C.slate]].forEach(p => el('circle', {cx:X(d.u), cy:Y(d[p[0]]), r:10, fill:p[1], stroke:'#fff', 'stroke-width':3}, g));
+    $('#vF1').textContent = f3(d.f1, 2); $('#vRec').textContent = f3(d.recall, 2); $('#vPre').textContent = f3(d.precision, 2);
+    let t;
+    if (d.recall >= .98) t = 'Con un umbral tan bajo casi todos los clientes disparan la alerta: se detectan todos los abandonos, pero solo ' + pc(d.precision, 0) + ' de las alertas son ciertas.';
+    else if (d.recall < .05) t = 'Con este umbral el modelo casi nunca da la alerta.';
+    else t = 'De cada 100 alertas, unas <b>' + Math.round(d.precision * 100) + '</b> son clientes que de verdad abandonan, y se detecta el <b>' + Math.round(d.recall * 100) + '%</b> de los abandonos.';
+    $('#uTxt').innerHTML = t;
+  }
+  enter[9] = function(){
+    base(); $('#uSl').value = Math.round(D.umbral * 100); actualizar();
+    const svg = $('#svgCal'); lim(svg); const mm = {l:58, r:20, t:14, b:48}, w = 520, h = 300, mx2 = 1;
+    const XC = v => mm.l + v / mx2 * (w - mm.l - mm.r), YC = v => h - mm.b - v / mx2 * (h - mm.t - mm.b);
+    [0, .5, 1].forEach(v => { el('line', {x1:XC(v), x2:XC(v), y1:mm.t, y2:h - mm.b, stroke:C.p3, 'stroke-width':1.2}, svg); el('line', {x1:mm.l, x2:w - mm.r, y1:YC(v), y2:YC(v), stroke:C.p3, 'stroke-width':1.2}, svg); el('text', {x:XC(v), y:h - mm.b + 24, 'text-anchor':'middle', 'font-size':18, fill:C.mute}, svg, pc(v, 0)); el('text', {x:mm.l - 10, y:YC(v) + 6, 'text-anchor':'end', 'font-size':18, fill:C.mute}, svg, pc(v, 0)); });
+    el('line', {x1:XC(0), y1:YC(0), x2:XC(1), y2:YC(1), stroke:C.mute, 'stroke-width':2.5, 'stroke-dasharray':'7 7'}, svg);
+    el('text', {x:(w + mm.l) / 2, y:h - 8, 'text-anchor':'middle', 'font-size':18, fill:C.slate}, svg, 'Riesgo predicho (cerca de la diagonal = bien calibrado)');
+    let d = ''; D.calibracion_cv.pred.forEach((v, i) => { d += (i ? 'L' : 'M') + XC(v) + ' ' + YC(D.calibracion_cv.real[i]); });
+    el('path', {d, fill:'none', stroke:C.amber, 'stroke-width':5, 'stroke-linejoin':'round'}, svg);
+    D.calibracion_cv.pred.forEach((v, i) => { const c = el('circle', {cx:XC(v), cy:YC(D.calibracion_cv.real[i]), r:7, fill:C.coal, stroke:'#fff', 'stroke-width':2}, svg); c.addEventListener('mousemove', ev => verTip(ev, 'Predicho ' + pc(v) + '<br>Real ' + pc(D.calibracion_cv.real[i]))); c.addEventListener('mouseleave', ocultarTip); });
+  };
+  $('#uSl').addEventListener('input', actualizar);
+  $('#uElegido').onclick = function(){ $('#uSl').value = Math.round(D.umbral * 100); actualizar(); };
+})();
+
+/* ---------- 11 prueba ---------- */
+enter[10] = function(){
+  const svg = $('#svgCm'); lim(svg); const cm = D.confusion_test, ox = 190, oy = 100, cw = 270, ch = 200;
+  el('text', {x:ox + cw / 2, y:50, 'text-anchor':'middle', 'font-size':26, 'font-weight':600, fill:C.coal}, svg, 'El modelo da la alerta');
+  el('text', {x:ox + cw * 1.5, y:50, 'text-anchor':'middle', 'font-size':26, 'font-weight':600, fill:C.coal}, svg, 'No da la alerta');
+  el('text', {x:ox - 18, y:oy + ch / 2 + 9, 'text-anchor':'end', 'font-size':26, 'font-weight':600, fill:C.coal}, svg, 'Abandonó');
+  el('text', {x:ox - 18, y:oy + ch * 1.5 + 9, 'text-anchor':'end', 'font-size':26, 'font-weight':600, fill:C.coal}, svg, 'Permaneció');
+  el('text', {x:ox - 18, y:oy + ch / 2 + 40, 'text-anchor':'end', 'font-size':20, fill:C.mute}, svg, '(real)');
+  [[0, 0, cm.tp, 'detectados', '#CFE7E2', C.ok], [0, 1, cm.fn, 'no detectados', '#F8D7D7', C.danger], [1, 0, cm.fp, 'falsas alarmas', '#FCE8C3', C.amberd], [1, 1, cm.tn, 'bien descartados', C.p2, C.slate]].forEach((c, i) => {
+    const x = ox + c[1] * cw, y = oy + c[0] * ch, g = el('g', {opacity: reducido ? 1 : 0}, svg);
+    el('rect', {x:x + 4, y:y + 4, width:cw - 8, height:ch - 8, rx:8, fill:c[4]}, g);
+    const n = el('text', {x:x + cw / 2, y:y + ch / 2 + 14, 'text-anchor':'middle', 'font-size':96, 'font-weight':700, fill:c[5], style:'font-family:var(--titulo)'}, g, '0');
+    el('text', {x:x + cw / 2, y:y + ch / 2 + 58, 'text-anchor':'middle', 'font-size':26, fill:C.slate}, g, c[3]);
+    setTimeout(() => { g.setAttribute('opacity', 1); contar(n, c[2], 1100, 0); }, reducido ? 0 : 300 + i * 350);
+  });
+  const sc = $('#svgCmp'); lim(sc); const an = D.meta.metricas_anidadas_entrenamiento, tm = D.meta.metricas_test, base = 270, alto = 220, xs = 40;
+  [['F1', 'F1', an.F1, tm.F1], ['Recall', 'Recall', an.Recall, tm.Recall], ['Precision', 'Precisión', an.Precision, tm.Precision]].forEach((g, i) => {
+    const gx = xs + i * 270;
+    [[g[2], C.blue], [g[3], C.amber]].forEach((b, j) => {
+      const h = b[0] / 1 * alto, x = gx + j * 100, r = el('rect', {x, y:base - (reducido ? h : 0), width:84, height:reducido ? h : 0, rx:4, fill:b[1]}, sc);
+      el('text', {x:x + 42, y:base - h - 12, 'text-anchor':'middle', 'font-size':26, 'font-weight':600, fill:C.coal}, sc, f3(b[0], 2));
+      if (!reducido) setTimeout(() => { r.style.transition = 'all .9s cubic-bezier(.2,.8,.2,1)'; r.setAttribute('y', base - h); r.setAttribute('height', h); }, 500 + i * 150);
+    });
+    el('text', {x:gx + 92, y:base + 34, 'text-anchor':'middle', 'font-size':25, fill:C.coal}, sc, g[1]);
+  });
+  el('rect', {x:40, y:306, width:20, height:20, rx:3, fill:C.blue}, sc); el('text', {x:68, y:323, 'font-size':22, fill:C.slate}, sc, 'entrenamiento (anidado)');
+  el('rect', {x:330, y:306, width:20, height:20, rx:3, fill:C.amber}, sc); el('text', {x:358, y:323, 'font-size':22, fill:C.slate}, sc, 'prueba');
+};
+
+/* ---------- 12 priorizar ---------- */
+(function(){
+  const orden = D.test_prob.map((p, i) => i).sort((a, b) => D.test_prob[b] - D.test_prob[a]);
+  const n = orden.length, positivos = D.test_y.reduce((s, v) => s + v, 0), columnas = 40, lado = 22;
+  function pintar(){
+    const svg = $('#svgPri'); lim(svg);
+    const frac = parseInt($('#pSl').value, 10) / 100, k = Math.round(frac * n);
+    orden.forEach((idx, pos) => {
+      const f = Math.floor(pos / columnas), c = pos % columnas, abandona = D.test_y[idx] === 1, contactado = pos < k;
+      const r = el('rect', {x:c * (lado + 3) + 4, y:f * (lado + 3) + 4, width:lado, height:lado, rx:4, fill: abandona ? C.amber : '#31476B', opacity: contactado ? 1 : .35}, svg);
+      r.addEventListener('mousemove', ev => verTip(ev, 'Puesto ' + (pos + 1) + '<br>Probabilidad ' + pc(D.test_prob[idx]) + '<br>' + (abandona ? 'Abandonó' : 'Permaneció')));
+      r.addEventListener('mouseleave', ocultarTip);
+    });
+    let capturados = 0; for (let i = 0; i < k; i++) capturados += D.test_y[orden[i]];
+    const precision = capturados / k, recall = capturados / positivos, lift = precision / (positivos / n);
+    $('#pVal').textContent = Math.round(frac * 100) + '%'; $('#pN').textContent = k; $('#pPre').textContent = pc(precision, 0); $('#pRec').textContent = pc(recall, 0); $('#pLift').textContent = f3(lift, 1) + '×';
+  }
+  enter[11] = function(){ $('#clienteTxt').textContent = ''; pintar(); };
+  $('#pSl').addEventListener('input', pintar);
+  $('#bCliente').onclick = function(){
+    const i = Math.floor(Math.random() * n), p = D.test_prob[i], y = D.test_y[i], puesto = orden.indexOf(i) + 1;
+    $('#clienteTxt').innerHTML = 'Cliente de prueba #' + (i + 1) + ': el modelo le da <b>' + pc(p, 1) + '</b> de probabilidad de abandono (puesto ' + puesto + ' de ' + n + '). ' + (y === 1 ? '<b style="color:#F59E0B">En la realidad abandonó.</b>' : '<b style="color:#7FD3B0">En la realidad permaneció.</b>');
+  };
+})();
+
+/* ---------- 14 cierre ---------- */
+enter[13] = function(){
+  const svg = $('#svgFin'); lim(svg); let sem = 5, d = '';
+  const azar = () => { sem = (sem * 16807) % 2147483647; return sem / 2147483647; };
+  for (let x = 0; x <= 1920; x += 8){ let y = 150 - Math.min(x, 1380) * 0.0; const caida = x > 1380 ? Math.pow((x - 1380) / 540, 1.5) * 110 : 0; y = 110 + Math.sin(x * .05) * 10 + (azar() - .5) * 14 + caida; d += (x ? 'L' : 'M') + x + ' ' + y.toFixed(1); }
+  const p = el('path', {d, fill:'none', stroke:'#F59E0B', 'stroke-width':3.5, 'stroke-linejoin':'round'}, svg);
+  if (!reducido){ const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset 3s ease'; setTimeout(() => { p.style.strokeDashoffset = 0; }, 80); }
+};
+
+/* ---------- arranque ---------- */
+const inicial = parseInt((location.hash || '#1').slice(1), 10);
+irA(isNaN(inicial) ? 0 : inicial - 1);
+if (inicial > 1) mostrarTodos(slides[actual]);
+
+
+})();
+</script>
+</body>
+</html>
