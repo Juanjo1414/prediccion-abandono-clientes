@@ -1,8 +1,8 @@
 {
-  "modelo": "Random Forest",
-  "estrategia_balanceo": "class_weight",
-  "preprocesamiento": "StandardScaler",
-  "calibracion": "sigmoide (regresión logística sobre puntajes fuera de pliegue)",
+  "modelo": "Red neuronal (MLP)",
+  "estrategia_balanceo": "Sin balanceo",
+  "preprocesamiento": "ANOVA k=10",
+  "calibracion": "sigmoide (Platt scaling)",
   "columnas_entrada": [
     "fallas_llamadas",
     "quejas",
@@ -16,49 +16,37 @@
     "plan_tarifario",
     "edad"
   ],
-  "umbral": 0.37,
+  "umbral": 0.43,
   "hiperparametros": {
-    "modelo__max_depth": "15",
-    "modelo__min_samples_leaf": "1",
-    "modelo__n_estimators": "400"
+    "modelo__alpha": "0.001",
+    "modelo__hidden_layer_sizes": "(100, 50)"
+  },
+  "metricas_entrenamiento": {
+    "F1": 0.8660826032540676,
+    "Recall": 0.8737373737373737,
+    "Precision": 0.858560794044665,
+    "ROC_AUC": 0.9827114126196047,
+    "Brier": 0.034454063423153415
   },
   "metricas_anidadas_entrenamiento": {
-    "F1": 0.8509451425014014,
-    "F1_desviacion": 0.0758463452206477,
-    "Recall": 0.882628205128205,
-    "Precision": 0.8231142755106091,
-    "Precision_promedio": 0.895499049109816,
-    "ROC_AUC": 0.9800282430102762,
-    "Brier": 0.0383467057368243
+    "F1": 0.8660826032540676,
+    "F1_desviacion": 0.0401205819464436,
+    "Recall": 0.8737373737373737,
+    "Precision": 0.858560794044665,
+    "ROC_AUC": 0.9827114126196047,
+    "Brier": 0.034454063423153415
   },
   "metricas_test": {
-    "F1": 0.8571428571428571,
-    "Recall": 0.8737864077669902,
+    "F1": 0.8737864077669902,
+    "Recall": 0.9090909090909091,
     "Precision": 0.8411214953271028,
-    "ROC_AUC": 0.981968193015505,
-    "Accuracy": 0.9530516431924883,
-    "Precision_promedio": 0.933403150957092,
-    "Brier": 0.03465032913435302
+    "ROC_AUC": 0.9904886910536629,
+    "Precision_promedio": 0.9570900686601963,
+    "Accuracy": 0.9587301587301588,
+    "Brier": 0.028318344615938653
   },
-  "intervalos_bootstrap_test_95": {
-    "F1": [
-      0.8,
-      0.9139861751152073
-    ],
-    "Recall": [
-      0.8,
-      0.9327871148459383
-    ],
-    "Precision": [
-      0.7567508813160988,
-      0.9293164200140944
-    ],
-    "Precision_promedio": [
-      0.8812963956198441,
-      0.9675044398840207
-    ]
-  },
-  "fecha_entrenamiento": "2026-10-10T22:54:08",
+  "intervalos_bootstrap_test_95": {},
+  "fecha_entrenamiento": "2026-10-13T19:57:36",
   "version_sklearn": "1.9.1",
   "version_imblearn": "0.14.2"
 }
