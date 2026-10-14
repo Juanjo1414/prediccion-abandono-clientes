@@ -345,15 +345,6 @@ En el set de prueba el modelo detecta **90 de los 103 abandonos** y da 17 falsas
 - **Informe final:** [`informe/Informe_Final.pdf`](informe/Informe_Final.pdf) (24 páginas). Su fuente es `informe/informe.html`; para regenerar el PDF basta con abrirlo en un navegador basado en Chromium e imprimir a PDF en tamaño A4 sin encabezados.
 - **Presentación:** abre `presentacion/presentacion.html` en el navegador. Flechas o espacio para avanzar, `O` para la vista general, `N` para las notas del orador, `T` para el cronómetro y `F` para pantalla completa. Incluye gráficas interactivas con los resultados reales (mapa de las 41 combinaciones, deslizador del umbral, deslizador de priorización de contactos) y los controles de rigor del notebook 05.
 
-## Trabajo con agentes de IA
-
-El equipo trabaja con Claude Code, Codex y Antigravity. Para que todos sigan las mismas reglas:
-
-- **`AGENTS.md`** es la fuente única de reglas: estilo de código, comentarios, decisiones tomadas, reglas de datos y forma de trabajar.
-- **`CLAUDE.md`** importa `AGENTS.md` para Claude Code, sin duplicar nada.
-- **`ESTADO.md`** dice en qué va el proyecto. Quien termine una tarea (persona o agente) lo actualiza.
-- **`PLAN.md`** tiene el paso a paso detallado de cada notebook y de la app.
-
 ## Solución de problemas
 
 | Problema | Solución |
