@@ -1,6 +1,6 @@
 {
   "modelo": "Red neuronal (MLP)",
-  "estrategia_balanceo": "Sin balanceo",
+  "estrategia_balanceo": "SMOTENC",
   "preprocesamiento": "ANOVA k=10",
   "calibracion": "sigmoide (Platt scaling)",
   "columnas_entrada": [
@@ -16,37 +16,38 @@
     "plan_tarifario",
     "edad"
   ],
-  "umbral": 0.43,
+  "umbral": 0.41,
   "hiperparametros": {
+    "balanceo__k_neighbors": "5",
     "modelo__alpha": "0.001",
     "modelo__hidden_layer_sizes": "(100, 50)"
   },
   "metricas_entrenamiento": {
-    "F1": 0.8660826032540676,
-    "Recall": 0.8737373737373737,
-    "Precision": 0.858560794044665,
-    "ROC_AUC": 0.9827114126196047,
-    "Brier": 0.034454063423153415
+    "F1": 0.8616504854368932,
+    "Recall": 0.8964646464646465,
+    "Precision": 0.8294392523364486,
+    "ROC_AUC": 0.9823660332134908,
+    "Brier": 0.032775824492537235
   },
   "metricas_anidadas_entrenamiento": {
-    "F1": 0.8660826032540676,
-    "F1_desviacion": 0.0401205819464436,
-    "Recall": 0.8737373737373737,
-    "Precision": 0.858560794044665,
-    "ROC_AUC": 0.9827114126196047,
-    "Brier": 0.034454063423153415
+    "F1": 0.8616504854368932,
+    "F1_desviacion": 0.0388870130716229,
+    "Recall": 0.8964646464646465,
+    "Precision": 0.8294392523364486,
+    "ROC_AUC": 0.9823660332134908,
+    "Brier": 0.032775824492537235
   },
   "metricas_test": {
-    "F1": 0.8737864077669902,
-    "Recall": 0.9090909090909091,
-    "Precision": 0.8411214953271028,
-    "ROC_AUC": 0.9904886910536629,
-    "Precision_promedio": 0.9570900686601963,
-    "Accuracy": 0.9587301587301588,
-    "Brier": 0.028318344615938653
+    "F1": 0.8613861386138614,
+    "Recall": 0.8787878787878788,
+    "Precision": 0.8446601941747572,
+    "ROC_AUC": 0.986037398466777,
+    "Precision_promedio": 0.9413102485205083,
+    "Accuracy": 0.9555555555555556,
+    "Brier": 0.03430848048146471
   },
   "intervalos_bootstrap_test_95": {},
-  "fecha_entrenamiento": "2026-10-13T19:57:36",
+  "fecha_entrenamiento": "2026-10-13T22:06:21",
   "version_sklearn": "1.9.1",
   "version_imblearn": "0.14.2"
 }

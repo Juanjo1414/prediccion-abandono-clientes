@@ -5,8 +5,8 @@ Leer este archivo, ESTADO.md y solo la sección pertinente de PLAN.md. Trabajar 
 ## Alcance acordado
 
 - Clasificación binaria sobre Iranian Churn (UCI 563). `abandono = 1` es abandono, `0` permanencia.
-- Conservar filas repetidas y mantener perfiles idénticos juntos en las particiones. Definir los grupos usando entradas, nunca la etiqueta. El criterio exacto está documentado en el notebook 01, antes de reservar test.
-- Reservar test una sola vez; usarlo únicamente para evaluación final. Mantener grupos también en validación cruzada.
+- Conservar filas repetidas. Usar una partición estratificada 80/20 con train_test_split y random_state=42, como en el notebook 01. No se agrupan perfiles idénticos: pueden aparecer en ambos conjuntos.
+- Reservar test una sola vez; usarlo únicamente para evaluación final. Usar StratifiedKFold de 10 particiones, con shuffle=True y random_state=42, sin agrupación de perfiles.
 - `Status` y `Customer Value` quedan fuera de las entradas del modelo por falta de trazabilidad sobre su construcción; no se asume que sean válidas ni que filtren el desenlace.
 - F1 de abandono como métrica principal; precisión, recall, precisión promedio y priorización como complementos. Accuracy no decide. No prometer un F1 ni elegir particiones para mejorarlo.
 - Escalado, codificación aprendida, selección y remuestreo dentro de pipelines. Ajustar umbral con train, nunca test.

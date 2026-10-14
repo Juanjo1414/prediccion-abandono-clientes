@@ -5,33 +5,45 @@ Actualizado: 2026-10-13.
 - [x] Paso 1: alcance acordado.
 - [x] Paso 2: estructura y entorno verificados.
 - [x] Paso 3: descargar y auditar dataset; notebook ejecutado en local.
-- [x] Paso 4: partición por grupos reservada y verificada.
+- [x] Paso 4: partición estratificada 80/20 sin grupos (2.520 filas de train y 630 de test).
 - [x] Paso 6: notebook 01 completado y ejecutado en local; Colab pendiente.
 - Paso 5: omitido por decisión del usuario; se avanzó directamente al notebook 02.
 - [x] Paso 7: notebook 02 simplificado (regresión logística y ANOVA), ejecutado en local; Colab pendiente.
 - [x] Paso 8: notebook 03 completado y ejecutado en local; Colab pendiente.
-- [x] Paso 9: notebook 04 completado y ejecutado en local (unos 26 minutos); Colab pendiente.
+- [x] Paso 9: notebook 04 completado y ejecutado en local (versión actual: unos 2 minutos, según la bitácora); Colab pendiente.
 - [x] Paso 9b (adicional, no numerado en PLAN.md): notebook 05 de controles de rigor, ejecutado en local; Colab pendiente.
 - [x] Paso 10: app Gradio (`app.py`) creada y probada en local.
 - [x] Paso 11: informe (`informe/informe.html` e `Informe_Final.pdf`) y presentación (`presentacion/presentacion.html`) terminados.
 
 ## Decisiones vigentes
 
+Estas decisiones describen los notebooks 01–04 de la propuesta actual. El notebook 05 y los entregables anteriores corresponden a otra versión y no validan esta partición.
+
 - Único proyecto del repositorio (desde 2026-10-13); el problema de peligro sísmico que ocupaba la raíz se descartó por acuerdo con la profesora y se eliminó del repositorio.
 - Dataset: Iranian Churn, UCI 563; objetivo binario de abandono.
-- Conservar repeticiones y separar perfiles idénticos por grupos, autorizado por el usuario.
+- Conservar repeticiones sin agrupar perfiles, autorizado por el usuario el 2026-10-13 para mantener la metodología de las referencias.
 - Status y Customer Value excluidas inicialmente, según acuerdo en chat. Se conservan las once entradas restantes, incluidos edad y grupo de edad; su redundancia se revisará en el notebook 02.
 - Se conservan las siete filas con cargo de nivel 10, sin corregirlas ni eliminarlas sin evidencia.
-- Partición existente reutilizada: 2.511 filas de entrenamiento y 639 de prueba, sin perfiles compartidos. Grupos definidos por las once entradas, nunca por abandono. Primera partición de StratifiedGroupKFold de cinco pliegues, semilla 42.
-- EDA y comparaciones realizados únicamente sobre entrenamiento. Se entrenó regresión logística de referencia en CV; no hay clasificador final ni evaluación predictiva de prueba.
-- Notebook 02: StandardScaler y las once entradas, sin PCA ni selección ANOVA. F1 CV 0,5972 ± 0,0632, precisión 0,4544 y recall 0,8804. Diferencia pequeña frente a no escalar (0,5948); decisión operativa, no superioridad demostrada.
+- Partición actual: train_test_split(test_size=0.20, stratify=y, random_state=42); 2.520 filas de entrenamiento y 630 de prueba. CV: StratifiedKFold de 10 particiones, shuffle=True, random_state=42. No se mantienen perfiles idénticos juntos. La revisión encontró 86 perfiles compartidos (160 filas de train y 102 de test).
+- EDA y comparaciones de alternativas sobre entrenamiento; evaluación predictiva final en el notebook 04.
+- Notebook 02: exporta StandardScaler + ANOVA k=10, F1 CV aproximadamente 0,603. Las conclusiones del notebook todavía describen la alternativa anterior de once variables.
 - Alcance del 02: tres escalados, PCA 90/95 % y ANOVA k=1..10 con regresión logística balanceada (liblinear). No incluye los demás selectores ni SVM de la versión de minas. La plantilla exportada está sin ajustar; sus pasos se concatenan con los del clasificador, sin anidar Pipeline dentro de imblearn.
-- Notebook 03: 12 clasificadores con cuatro estrategias (sin balanceo, class_weight, SMOTENC y submuestreo; 41 combinaciones), con las diez particiones por grupos del 02 leídas de `02_particiones_cv.csv`. Sobremuestreo con SMOTENC y `quejas` y `plan_tarifario` como categóricas (SMOTE inventó 12 valores inválidos de `plan_tarifario` en la primera partición; SMOTENC ninguno). Candidatos: Stacking+SMOTENC (F1 0,862), Random Forest+class_weight (0,858) y red neuronal sin balancear (0,838). Control de fuga entre particiones sin evidencia de fuga.
-- Notebook 04: hiperparámetros por precisión promedio, calibración sigmoide con puntajes fuera de pliegue, umbral con probabilidades calibradas de entrenamiento y estimación **anidada** por grupos (5 externas, 5 internas). Modelo final: Random Forest con class_weight (400 árboles, profundidad 15, hojas mínimas 1), umbral 0,37. F1 anidado 0,851 ± 0,076; **F1 en prueba 0,857** (IC 95 % por bootstrap de grupos: 0,800 a 0,914), recall 0,874, precisión 0,841, ROC AUC 0,982, Brier 0,035; 90 de 103 abandonos detectados y 17 falsas alarmas entre 536. Empata en la práctica con Stacking y con la red neuronal (diferencia de 0,0024 en F1 anidado). Prueba abierta una sola vez, con todo congelado.
-- El F1 de 0,59 del notebook 02 era de una regresión logística (modelo lineal); la regresión logística vuelve a dar 0,57–0,60 en el 03. Los modelos de árboles llegan a 0,79–0,86 por interacciones (quejas, uso bajo), no por fuga. Cautela abierta: sin fechas no se puede descartar que alguna entrada (uso cero) refleje un abandono ya ocurrido.
+- Notebook 03: 12 clasificadores y 41 combinaciones con CV estratificada sin grupos. Pipeline corregido: escalador → balanceador (si aplica) → ANOVA → modelo. Candidatos actualizados: Stacking + SMOTENC (F1 0,8641), Random Forest + class_weight (0,8548) y MLP + SMOTENC (0,8399). Control de categorías en los diez pliegues: cero valores inválidos para quejas y plan_tarifario. Algunas ejecuciones de MLP llegaron a max_iter=1000 sin converger.
+- Notebook 04: GridSearchCV por precisión promedio, calibración sigmoide y umbral con train, sin validación anidada. Tras corregir el orden del pipeline selecciona MLP + SMOTENC, capas (100, 50), alpha=0,001, k_neighbors=5 y umbral 0,41. F1 de selección 0,86165 (Random Forest 0,86154, diferencia mínima); F1 test 0,8614, recall 0,8788, precisión 0,8447 y ROC AUC 0,9860; 87 de 99 abandonos detectados. Pendientes fuera de esta corrección: calibrador final ajustado con puntajes del propio entrenamiento y nombre de métricas anidadas. Conclusiones actualizadas mediante tabla calculada.
+- Las diferencias de F1 entre modelos no demuestran ausencia de fuga. La partición actual admite perfiles compartidos; sin fechas tampoco se puede descartar que alguna entrada refleje un abandono ya ocurrido.
 - Cada paso requiere indicación del usuario. No crear notebooks o app durante la preparación del entorno.
 
 ## Bitácora
+
+- 2026-10-13: completada la instalación con uv sync --locked (sin nuevas dependencias ni cambios en pyproject.toml/uv.lock). Ejecutados completos con nbconvert los notebooks 03 y 04 tras corregir el orden SMOTENC–ANOVA; 13 celdas de código en cada uno, cero errores de celda. Funciones armar_pipeline y crear_balanceador idénticas en ambos. Verificación de categorías guardada en resultados/03_control_categorias_smotenc.csv; cero valores inválidos en diez pliegues. Regenerados comparaciones, candidatos, figuras, modelo final y metadatos. Recarga del modelo con probabilidades y predicciones idénticas. Huellas de original, train y test sin cambios. La evaluación de test se repitió por esta corrección autorizada, sin usarla para elegir parámetros. Advertencias de convergencia de MLP registradas; no se modificaron sus límites. Colab no probado.
+
+- 2026-10-13: comparación de la referencia de clasificadores con `clasificacion.ipynb` de Fundamentos de analítica, solicitada por el usuario. Este último propone buscar hiperparámetros para nueve familias (solo cuatro búsquedas tienen salidas guardadas), pero imputa incluyendo la etiqueta y balancea/transforma antes de separar datos; además, selecciona con el conjunto llamado test y reconstruye otro pipeline para despliegue. Recomendación: conservar los cuatro notebooks y pipelines, incorporar búsqueda acotada por familia antes de descartar modelos y no imponer a todos la selección elegida con regresión logística. Solo análisis; sin modificar notebooks ni entrenar modelos.
+
+- 2026-10-13: matizadas las afirmaciones absolutas sobre ausencia de fuga en el markdown de los notebooks 01–03. Ahora explican que test se reserva para evaluación final, que las transformaciones y el remuestreo aprenden dentro de cada pliegue y que pueden existir perfiles repetidos entre conjuntos porque no se usan grupos. Verificado que código y salidas no cambiaron y que los archivos siguen siendo JSON válido. Se intentó ejecutar nbconvert con uv, pero el entorno local carece de dependencias en caché (llvmlite) y la ejecución offline no pudo iniciarse; no se afirma reejecución.
+
+Las entradas anteriores documentan decisiones históricas; las menciones a agrupación de perfiles y sus resultados no describen la propuesta vigente.
+
+- 2026-10-13: por petición del usuario, actualizadas las reglas, el plan y la documentación para describir la partición estratificada 80/20 y CV de 10 pliegues sin grupos. Se retira la exigencia de mantener perfiles idénticos juntos. Sin cambios en datos, entrenamiento ni notebooks; resultados y controles de versiones anteriores identificados como históricos.
 
 - 2026-10-13: refactorización de notebooks 01 a 04 para alinearlos al estilo estándar de clase (referencia/):
   - Notebook 01: eliminación de assert, hashlib y StratifiedGroupKFold por grupos idénticos; partición 80/20 estándar con train_test_split estratificado.

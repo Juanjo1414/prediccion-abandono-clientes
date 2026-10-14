@@ -4,7 +4,7 @@
 
 **¿Qué cliente va a irse? Un modelo que ordena a los clientes por riesgo de abandono para priorizar las llamadas de retención.**
 
-Proceso completo de Machine Learning sobre el dataset Iranian Churn: análisis exploratorio, partición por grupos de perfiles, comparación de 12 clasificadores con 4 estrategias de balanceo, controles de rigor contra la fuga de información y publicación del mejor modelo en una app web con Gradio.
+Proceso completo de Machine Learning sobre el dataset Iranian Churn: análisis exploratorio, partición estratificada 80/20 sin grupos, comparación de 12 clasificadores con 4 estrategias de balanceo, controles de rigor contra la fuga de información y publicación del mejor modelo en una app web con Gradio.
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white)
@@ -46,7 +46,7 @@ Proceso completo de Machine Learning sobre el dataset Iranian Churn: análisis e
 
 Una empresa de telecomunicaciones no puede llamar a todos sus clientes para ofrecerles algo que los haga quedarse: necesita saber a quién llamar primero. Este proyecto usa el uso del servicio durante los primeros **nueve meses** de la suscripción para predecir si un cliente **abandonará en el mes doce**, con el fin de priorizar los contactos de retención hacia los clientes de mayor riesgo.
 
-El reto no es solo el desbalance de clases (solo el **15,7%** de los clientes abandona), sino también que el conjunto trae **cientos de clientes con el mismo perfil de entrada** repetido con identificadores distintos, sin que su origen esté documentado. Partir los datos al azar dejaría el mismo perfil en entrenamiento y en prueba, inflando el resultado. Por eso la partición y la validación cruzada **agrupan los perfiles idénticos**, y un cuaderno completo (05) pone a prueba el resultado final con controles de fuga de información antes de confiar en él.
+El conjunto tiene un **15,7 % de abandono** y 300 filas repetidas, que se conservan. Los notebooks actuales usan `train_test_split` estratificado 80/20 y `StratifiedKFold` de 10 particiones, sin agrupar perfiles idénticos. Por tanto, un mismo perfil puede aparecer en entrenamiento y prueba. La revisión de los CSV encontró 86 perfiles compartidos, presentes en 102 de las 630 filas de prueba.
 
 Proyecto final de **Fundamentos de Inteligencia Artificial** — Universidad EIA, 2026-2.
 
@@ -111,8 +111,8 @@ flowchart LR
 
     subgraph NB1["01 · EDA y limpieza"]
         EDA["Análisis exploratorio\nclase · quejas · phik"]
-        GRP["Agrupar perfiles idénticos"]
-        SPLIT["Partición por grupos\n80/20"]
+        GRP["Conservar filas repetidas"]
+        SPLIT["Partición estratificada\n80/20 sin grupos"]
     end
 
     subgraph NB2["02 · Escalado y selección"]
@@ -122,16 +122,16 @@ flowchart LR
     end
 
     subgraph NB3["03 · Balanceo y modelos"]
-        CMP["12 modelos × 4 estrategias\nvalidación cruzada por grupos"]
+        CMP["12 modelos × 4 estrategias\nvalidación cruzada estratificada sin grupos"]
     end
 
     subgraph NB4["04 · Ajuste y exportación"]
         GS["GridSearchCV + calibración"]
-        NEST["Validación anidada\n5 externas × 5 internas"]
+        NEST["Selección de umbral\ncon entrenamiento"]
         TEST["Evaluación única en prueba"]
     end
 
-    subgraph NB5["05 · Controles de rigor"]
+    subgraph NB5["05 · Controles históricos"]
         CTRL["Etiquetas mezcladas\nagrupación estricta · vecinos"]
     end
 
@@ -150,11 +150,11 @@ flowchart LR
 | Notebook | Qué hace | Genera |
 | :--- | :--- | :--- |
 | `00_Auditoria_Datos.ipynb` | Audita el archivo original: esquema, nulos, duplicados, dominios de cada columna, revisión de `Status` y `Customer Value` | `resultados/auditoria_*.csv`, `resultados/AUDITORIA.md` |
-| `01_EDA_Limpieza_Churn.ipynb` | Explora el conjunto, agrupa los perfiles idénticos y separa entrenamiento/prueba por grupos | `data/train.csv`, `data/test.csv`, `data/test_original.csv`, grupos de entrenamiento |
-| `02_Escalado_PCA_Seleccion_Churn.ipynb` | Compara escaladores, PCA y selección ANOVA con validación cruzada por grupos | `models/decisiones_preprocesamiento.joblib`, `resultados/comparacion_rasgos.csv` |
-| `03_Balanceo_Comparacion_Modelos_Churn.ipynb` | Evalúa 12 modelos × 4 estrategias de balanceo (41 combinaciones) y controles de fuga/sobremuestreo | `resultados/comparacion_modelos.csv`, `resultados/03_candidatos.csv` |
-| `04_Ajuste_Evaluacion_Exportacion_Churn.ipynb` | Ajusta los 3 candidatos, calibra probabilidades, elige umbral, hace validación **anidada**, evalúa en prueba una sola vez y exporta | `models/modelo_final.joblib`, `models/metadata_modelo.json`, `resultados/ajuste_hiperparametros.csv` |
-| `05_Controles_Rigor_Churn.ipynb` | Integridad de la partición, etiquetas mezcladas al azar, agrupación más estricta de perfiles parecidos, vecinos cercanos | `resultados/05_*.csv` |
+| `01_EDA_Limpieza_Churn.ipynb` | Explora train y separa entrenamiento/prueba con estratificación 80/20, sin grupos | `data/train.csv`, `data/test.csv`, `data/test_original.csv` |
+| `02_Escalado_PCA_Seleccion_Churn.ipynb` | Compara escaladores, PCA y selección ANOVA con validación cruzada estratificada sin grupos | `models/decisiones_preprocesamiento.joblib`, `resultados/comparacion_rasgos.csv` |
+| `03_Balanceo_Comparacion_Modelos_Churn.ipynb` | Evalúa 12 modelos × 4 estrategias de balanceo (41 combinaciones) con CV estratificada sin grupos | `resultados/comparacion_modelos.csv`, `resultados/03_candidatos.csv` |
+| `04_Ajuste_Evaluacion_Exportacion_Churn.ipynb` | Ajusta los 3 candidatos, calibra probabilidades, elige umbral, evalúa en prueba una sola vez y exporta | `models/modelo_final.joblib`, `models/metadata_modelo.json`, `resultados/ajuste_hiperparametros.csv` |
+| `05_Controles_Rigor_Churn.ipynb` | Histórico de la versión anterior; no valida la partición actual. Integridad de la partición, etiquetas mezcladas al azar, agrupación más estricta de perfiles parecidos, vecinos cercanos | `resultados/05_*.csv` |
 | `app.py` | Publica el modelo en una app web | — |
 
 ## Modelos y estrategias de balanceo
@@ -178,10 +178,10 @@ flowchart LR
 prediccion-abandono-clientes/
 ├── data/
 │   ├── original/                          # Archivo original de UCI, sin modificar
-│   ├── train.csv                          # Generado por el notebook 01 (2.511 filas)
-│   ├── test.csv                           # Generado por el notebook 01 (639 filas)
+│   ├── train.csv                          # Generado por el notebook 01 (2.520 filas)
+│   ├── test.csv                           # Generado por el notebook 01 (630 filas)
 │   ├── test_original.csv                  # Test con los valores originales, para la app
-│   └── grupos_train.csv                   # Grupo de perfil de cada fila de entrenamiento
+│   └── grupos_train.csv                   # Archivo histórico; no usado por los notebooks 01–04 actuales
 ├── models/
 │   ├── decisiones_preprocesamiento.joblib # Notebook 02 (escalador sin ajustar)
 │   ├── modelo_final.joblib                # Notebook 04 (pipeline, calibrador, umbral, columnas)
@@ -218,9 +218,9 @@ prediccion-abandono-clientes/
 | Lenguaje | Python 3.11 |
 | Datos y análisis | pandas, NumPy, SciPy |
 | Visualización | Matplotlib, Seaborn, phik (correlación con variables categóricas) |
-| Machine Learning | scikit-learn (pipelines, PCA, selección ANOVA, 12 clasificadores, GridSearchCV, validación anidada) |
+| Machine Learning | scikit-learn (pipelines, PCA, selección ANOVA, 12 clasificadores, GridSearchCV, validación estratificada) |
 | Balanceo de clases | imbalanced-learn (SMOTENC, RandomUnderSampler, Pipeline) |
-| Validación por grupos | `StratifiedGroupKFold` (perfiles idénticos nunca cruzan entrenamiento/validación) |
+| Validación cruzada | `StratifiedKFold` de 10 particiones sin grupos |
 | Persistencia del modelo | joblib, JSON |
 | App web | Gradio |
 | Entorno | uv (`pyproject.toml` + `uv.lock`), Jupyter en VS Code, Google Colab |
@@ -228,13 +228,13 @@ prediccion-abandono-clientes/
 ## Decisiones técnicas
 
 - **F1 de la clase que abandona como métrica principal.** Con 15,7% de positivos el accuracy ya no engaña tanto como en un desbalance extremo, pero sigue premiando al modelo que nunca avisa (84,4% de accuracy con F1 = 0).
-- **Agrupar perfiles idénticos antes de partir.** El conjunto trae 300 filas repetidas exactamente y cientos de clientes con el mismo perfil de entrada e identificadores distintos. Partir al azar dejaría el mismo perfil en entrenamiento y prueba, inflando el resultado. La partición y las 10 particiones de validación cruzada agrupan esos perfiles.
+- **Partición estratificada sin grupos.** Se conservan las repeticiones y se mantiene la proporción de abandono con `stratify=y`. No se garantiza separación de perfiles idénticos.
 - **Balanceo dentro del pipeline.** SMOTENC y el submuestreo van dentro de un `Pipeline` de imbalanced-learn, ajustados solo con los datos de entrenamiento de cada partición.
 - **`Status` y `Customer Value` fuera del modelo.** Se dejaron fuera por falta de documentación sobre su construcción, no porque se haya demostrado que filtran el desenlace; tampoco se reintrodujeron para mejorar el resultado.
-- **Set de prueba reservado.** El 20% de prueba se separa una vez en el notebook 01 (respetando los grupos) y solo se usa al final del notebook 04.
+- **Set de prueba reservado.** El 20 % se separa en el notebook 01 con semilla 42 y se utiliza para la evaluación final en el 04.
 - **Calibración de probabilidades.** El balanceo distorsiona las probabilidades del modelo; se calibran con una curva sigmoide ajustada sobre predicciones fuera de pliegue, para que la app pueda mostrar un riesgo interpretable.
-- **Validación anidada.** Antes de confiar en el F1 de desarrollo, se repite todo el procedimiento (hiperparámetros, calibración y umbral) dentro de una validación anidada (5 particiones externas × 5 internas, por grupos), para estimar el rendimiento de todo el procedimiento y no solo del modelo ya elegido con los mismos datos.
-- **Controles de rigor (notebook 05).** Un F1 de 0,857 exige desconfiar: se comprobó que no hay perfiles compartidos entre entrenamiento y prueba, que las etiquetas mezcladas al azar hunden el ROC AUC a 0,49 (sin fuga mecánica) y que, al agrupar clientes parecidos y no solo idénticos, el F1 baja de 0,859 a 0,811. Por eso el resultado final se reporta como un rango (0,81–0,86).
+- **Validación estratificada.** Los notebooks 02–04 usan diez particiones sin grupos. La versión actual no realiza validación anidada.
+- **Controles históricos (notebook 05).** Corresponden a una partición anterior y no demuestran ausencia de perfiles compartidos en la propuesta actual.
 
 ## Puesta en marcha en local (recomendado)
 
@@ -278,10 +278,10 @@ Abre la carpeta del proyecto en VS Code, abre `00_Auditoria_Datos.ipynb` y en **
 Verifica que la primera celda de cada notebook tenga `EN_COLAB = False` y ejecuta cada uno con **Run All**:
 
 ```text
-00_Auditoria_Datos → 01_EDA_Limpieza_Churn → 02_Escalado_PCA_Seleccion_Churn → 03_Balanceo_Comparacion_Modelos_Churn → 04_Ajuste_Evaluacion_Exportacion_Churn → 05_Controles_Rigor_Churn
+00_Auditoria_Datos → 01_EDA_Limpieza_Churn → 02_Escalado_PCA_Seleccion_Churn → 03_Balanceo_Comparacion_Modelos_Churn → 04_Ajuste_Evaluacion_Exportacion_Churn
 ```
 
-El notebook 03 evalúa 41 combinaciones de modelo y balanceo con validación cruzada por grupos, y el 04 hace además una validación anidada, así que ambos tardan varios minutos (el 04, unos 26 en un computador normal).
+El notebook 03 evalúa 41 combinaciones con CV estratificada de 10 particiones sin grupos. El 04 ajusta los tres candidatos con esa misma configuración de CV.
 
 También se pueden ejecutar desde la terminal:
 
@@ -319,7 +319,9 @@ En Colab, cambia `EN_COLAB = True` dentro de `app.py` y ejecútalo desde la carp
 
 > ⚠️ Proyecto académico. La app no estima si una oferta concreta evitará el abandono ni cuánto ahorraría hacerlo, y no reemplaza el criterio del equipo de retención.
 
-## Resultados
+## Resultados históricos de la versión anterior
+
+**Esta sección conserva resultados anteriores y no describe los notebooks 01–04 actuales.** La propuesta actual selecciona StandardScaler + ANOVA k=10 y MLP sin balanceo, umbral 0,43; la salida guardada del 04 reporta F1 de prueba 0,8738. Su partición es estratificada sin grupos y no hay evaluación anidada.
 
 **Preprocesamiento elegido:** `StandardScaler`, sin PCA ni selección de variables (ningún subconjunto de las once entradas superó usarlas todas).
 
@@ -341,6 +343,8 @@ En el set de prueba el modelo detecta **90 de los 103 abandonos** y da 17 falsas
 
 ## Informe y presentación
 
+**Entregables históricos:** el HTML, el PDF y la presentación describen la versión anterior con agrupación. No deben presentarse como documentación de la propuesta actual; requieren actualización integral de resultados y metodología.
+
 - **Informe final:** [`informe/Informe_Final.pdf`](informe/Informe_Final.pdf) (24 páginas). Su fuente es `informe/informe.html`; para regenerar el PDF basta con abrirlo en un navegador basado en Chromium e imprimir a PDF en tamaño A4 sin encabezados.
 - **Presentación:** abre `presentacion/presentacion.html` en el navegador. Flechas o espacio para avanzar, `O` para la vista general, `N` para las notas del orador, `T` para el cronómetro y `F` para pantalla completa. Incluye gráficas interactivas con los resultados reales (mapa de las 41 combinaciones, deslizador del umbral, deslizador de priorización de contactos) y los controles de rigor del notebook 05.
 
@@ -357,7 +361,7 @@ En el set de prueba el modelo detecta **90 de los 103 abandonos** y da 17 falsas
 ## Limitaciones conocidas
 
 - Los datos no traen fecha de medición, así que no se puede descartar por completo que alguna entrada (por ejemplo, uso igual a cero) ya refleje un abandono que ya había ocurrido.
-- El control de agrupación estricta (notebook 05) muestra que parte del F1 (unos 0,05) depende de que clientes muy parecidos puedan quedar en ambos lados de la partición.
+- Hay perfiles idénticos compartidos entre entrenamiento y prueba; los controles históricos del notebook 05 no validan la partición actual.
 - `Status` y `Customer Value` se dejaron fuera por falta de documentación, no porque se haya demostrado que filtran el desenlace.
 - Los datos son de una sola empresa de telecomunicaciones; no se sabe cómo se comportaría el modelo en otro periodo o mercado.
 - El umbral de 0,37 maximiza el F1, pero el umbral adecuado depende de cuánto cueste contactar a un cliente frente a perderlo; no se estimó ese costo en este trabajo.
