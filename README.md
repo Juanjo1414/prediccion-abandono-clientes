@@ -35,11 +35,10 @@ Proceso completo de Machine Learning sobre el dataset Iranian Churn: análisis e
 12. [App web](#app-web)
 13. [Resultados](#resultados)
 14. [Informe y presentación](#informe-y-presentación)
-15. [Trabajo con agentes de IA](#trabajo-con-agentes-de-ia)
-16. [Solución de problemas](#solución-de-problemas)
-17. [Limitaciones conocidas](#limitaciones-conocidas)
-18. [Mejoras futuras](#mejoras-futuras)
-19. [Referencias](#referencias)
+15. [Solución de problemas](#solución-de-problemas)
+16. [Limitaciones conocidas](#limitaciones-conocidas)
+17. [Mejoras futuras](#mejoras-futuras)
+18. [Referencias](#referencias)
 
 ---
 

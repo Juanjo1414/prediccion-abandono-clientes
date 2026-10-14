@@ -6,3 +6,4 @@ __pycache__/
 flagged/
 .DS_Store
 Thumbs.db
+*.claude
