@@ -2062,7 +2062,7 @@ wheels = [
 ]
 
 [[package]]
-name = "prediccion-sismica-minas"
+name = "prediccion-abandono-clientes"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

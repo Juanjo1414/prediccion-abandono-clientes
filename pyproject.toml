@@ -1,6 +1,6 @@
 [project]
-name = "prediccion-sismica-minas"
-description = "Predicción de peligro sísmico en minas de carbón (Fundamentos de IA, Universidad EIA)"
+name = "prediccion-abandono-clientes"
+description = "Predicción de abandono de clientes de telecomunicaciones (Fundamentos de IA, Universidad EIA)"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [

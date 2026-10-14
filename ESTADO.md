@@ -1,101 +1,50 @@
-# ESTADO.md — En qué va el proyecto
+# Estado del proyecto
 
-> Este archivo lo actualiza quien termine una tarea (persona o agente). Es la forma de que todos sepamos en qué va el proyecto sin tener que preguntar.
-> Regla: al terminar, marca el avance, anota cualquier decisión nueva y agrega una línea a la bitácora (la más reciente arriba).
+Actualizado: 2026-10-13.
 
-**Última actualización:** 2026-10-10
+- [x] Paso 1: alcance acordado.
+- [x] Paso 2: estructura y entorno verificados.
+- [x] Paso 3: descargar y auditar dataset; notebook ejecutado en local.
+- [x] Paso 4: partición por grupos reservada y verificada.
+- [x] Paso 6: notebook 01 completado y ejecutado en local; Colab pendiente.
+- Paso 5: omitido por decisión del usuario; se avanzó directamente al notebook 02.
+- [x] Paso 7: notebook 02 simplificado (regresión logística y ANOVA), ejecutado en local; Colab pendiente.
+- [x] Paso 8: notebook 03 completado y ejecutado en local; Colab pendiente.
+- [x] Paso 9: notebook 04 completado y ejecutado en local (unos 26 minutos); Colab pendiente.
+- [x] Paso 9b (adicional, no numerado en PLAN.md): notebook 05 de controles de rigor, ejecutado en local; Colab pendiente.
+- [x] Paso 10: app Gradio (`app.py`) creada y probada en local.
+- [x] Paso 11: informe (`informe/informe.html` e `Informe_Final.pdf`) y presentación (`presentacion/presentacion.html`) terminados.
 
-## Avance
+## Decisiones vigentes
 
-### Preparación
-- [ ] Repositorio creado en GitHub y primer push
-- [x] Entorno con uv funcionando en local (`uv sync`)
-- [x] `data/seismic-bumps.arff` oficial descargado de UCI
-- [x] Notebooks de clase copiados en `referencia/`
-
-### Notebooks
-- [x] 01 — Carga, EDA, limpieza, codificación y partición (ejecutado completo sin errores; reejecutado 2026-10-10 como parte de la auditoría, sin cambios en los resultados)
-- [x] 02 — Escalado, PCA y selección de rasgos (ejecutado completo sin errores; reejecutado 2026-10-10 como parte de la auditoría)
-- [x] 03 — Balanceo y comparación de los 12 modelos (ejecutado completo sin errores; reejecutado 2026-10-10 como parte de la auditoría)
-- [x] 04 — Ajuste, evaluación final y exportación (ejecutado completo sin errores; 2026-10-10 se agregó una sección de **estimación anidada** del F1, sin tocar test)
-- [x] 05 — Controles de rigor (nuevo, 2026-10-10): hashes de integridad de los CSV, validación cruzada en bloques temporales (sin fechas reales, usando el orden de las filas) y etiquetas permutadas al azar; sin evidencia de fuga de información
-
-### Publicación y entregables
-- [x] App Gradio funcionando en local (probada el 2026-10-06, ver bitácora)
-- [ ] App Gradio funcionando en Colab (enlace público)
-- [x] README con resultados finales (2026-10-06; falta llenar los integrantes si cambian; falta reflejar la estimación anidada del 2026-10-10)
-- [x] Informe (`informe/Informe_Final.pdf`, 22 páginas; fuente en `informe/informe.html`; falta actualizar con la estimación anidada y los controles de rigor del notebook 05)
-- [ ] Presentación ensayada con demo (la presentación interactiva ya está en `presentacion/presentacion.html`; falta ensayar, probar la app en Colab y reflejar la estimación anidada)
-
-### Publicación y entregables
-- [x] App Gradio funcionando en local (probada el 2026-10-06, ver bitácora)
-- [ ] App Gradio funcionando en Colab (enlace público)
-- [x] README con resultados finales (2026-10-06; falta llenar los integrantes si cambian)
-- [x] Informe (`informe/Informe_Final.pdf`, 22 páginas; fuente en `informe/informe.html`)
-- [ ] Presentación ensayada con demo (la presentación interactiva ya está en `presentacion/presentacion.html`; falta ensayar y probar la app en Colab)
-
-## Decisiones tomadas
-
-| Fecha | Decisión | Motivo |
-| :--- | :--- | :--- |
-| 2026-10-05 | Problema: peligro sísmico en minas de carbón (seismic-bumps, UCI 266) | Clasificación binaria con desbalance real (~6,6%), poco común en cursos |
-| 2026-10-05 | Comparar 12 modelos × 4 estrategias de balanceo (sin balanceo, class_weight, SMOTE, submuestreo) | Requisito del trabajo: comparar todos los modelos vistos en clase |
-| 2026-10-05 | Métrica principal: F1 de la clase peligrosa | Con 6,6% de positivos el accuracy engaña |
-| 2026-10-05 | Todo el código en notebooks, estilo de la profesora; funciones de una sola responsabilidad; sin `src/` | Pedido del grupo: que prime el estilo de clase |
-| 2026-10-05 | Partición 80/20 estratificada y CV de 10 particiones | Igual que en clase; con ~2.000 filas no hay problema de tiempo |
-| 2026-10-05 | Datos y modelos sí se versionan en Git | Son pequeños; la app funciona apenas se clona |
-| 2026-10-06 | Se quitan los 6 duplicados exactos antes de partir (todos de clase 0) | No cuestan ningún turno peligroso y evitan que una misma fila caiga en train y en test |
-| 2026-10-06 | Se eliminan `nbumps6`, `nbumps7` y `nbumps89` (constantes en 0) | No aportan información; se confirmó en el EDA |
-| 2026-10-06 | Valores extremos no se eliminan | Son eventos sísmicos reales, justo lo que se quiere detectar |
-| 2026-10-06 | Escalador: `MinMaxScaler` | Mejor F1 promedio entre regresión logística y SVM (0,2656 vs 0,2580 Standard y 0,2378 sin escalar); diferencias pequeñas frente a la desviación |
-| 2026-10-06 | No usar PCA | 5 componentes dan 90% y 7 dan 95% de la varianza, pero el F1 no mejora (0,264 y 0,267 vs 0,269) y se pierde interpretación |
-| 2026-10-06 | Regla de selección de rasgos cambiada: solo compiten métodos con selector dentro del pipeline, mínimo 3 rasgos y gana el de mayor F1 | La regla del plan dejaba solo `nbumps` (1 rasgo), con F1 de todos los métodos dentro del ruido de la CV; con 1 rasgo el 03 y la app pierden sentido. Decidido por Juan |
-| 2026-10-06 | Rasgos elegidos: `gpuls`, `nbumps`, `nbumps2`, `nbumps3`, `energy` (SelectKBest con información mutua, k=5) | F1 CV 0,283 ± 0,068 y ROC AUC 0,768 (vs 0,744 de `nbumps` solo); selección sin filtración |
-| 2026-10-06 | Top 3 para el notebook 04: Naive Bayes, regresión logística y SVM lineal, los tres con submuestreo | Mayor F1 en CV entre modelos distintos (0,309, 0,298 y 0,291); la SVM lineal no tiene `predict_proba`, así que si gana en el 04 se consulta al grupo |
-| 2026-10-06 | La app pide solo los rasgos de `metadata_modelo.json` (hoy 5, todos numéricos) y muestra el riesgo en % más el veredicto con el umbral; el CSV solo necesita esas columnas (las demás se ignoran) | El formulario se arma solo a partir de `rasgos`, como pide el plan; así no se piden datos que el modelo no usa |
-| 2026-10-06 | Cambio de enfoque en el notebook 04: hiperparámetros con `scoring='average_precision'` (no F1) y probabilidades calibradas (`CalibratedClassifierCV`, sigmoide, cv=5) antes de elegir el umbral | La primera versión (regresión logística `C=0,01`, F1 test 0,296) daba probabilidades pegadas a 0,5, inservibles para la app. Decidido por Juan: un modelo que funcione bien, aunque se salga del plan. Se detectó con datos de train, pero el test de la primera versión ya se había visto: **el test ya no es virgen y hay que decirlo en el informe** |
-| 2026-10-06 | Modelo final: SVM lineal + submuestreo + calibración sigmoide (`C=0,1`), umbral 0,10 | Mayor F1 en CV con probabilidades calibradas (0,333 vs 0,323 de regresión logística y 0,309 de Naive Bayes; empate práctico). La calibración le da `predict_proba` a la SVM lineal |
-| 2026-10-06 | Grilla de umbrales de 0,01 en 0,01 (en vez de 0,05 en 0,05 del plan) | Con probabilidades calibradas la mayoría quedan por debajo de 0,2 y se necesitan pasos finos |
-| 2026-10-06 | Trabajo directo en `main`, sin ramas ni PR; en los commits solo aparece la persona (nunca un agente) | Pedido de Juan; quedó en AGENTS.md y PLAN.md |
-| 2026-10-06 | El EDA y phik se hacen con los datos completos, antes de partir; el 01 no elige nada a partir de eso | Plan sección 5; la selección de rasgos se decide en el 02 solo con train |
-
-## Resultados clave (se llenan a medida que avanzamos)
-
-- **Filas del ARFF oficial:** 2.584 filas y 19 columnas (coincide con UCI), sin nulos. 170 peligrosos (6,58%); un modelo que siempre diga "sin peligro" saca 93,42% de accuracy
-- **Duplicados eliminados:** 6 (todos de clase 0); quedan 2.578 filas
-- **Columnas constantes eliminadas:** `nbumps6`, `nbumps7`, `nbumps89`; quedan 16 columnas (15 rasgos + `class`)
-- **Partición 80/20 (estratificada, seed 42):** train 2.062 filas (136 peligrosos, 6,60%) y test 516 (34 peligrosos, 6,59%)
-- **Mayor phik con la clase:** `nbumps` 0,350, `gpuls` 0,263, `genergy` 0,231, `shift` 0,216. Redundantes: `energy`/`maxenergy` 0,96, `genergy`/`gpuls` 0,89, `seismoacoustic`/`ghazard` 0,84
-- **Escalador elegido:** `MinMaxScaler`. PCA descartado (5 comps = 90%, 7 = 95%)
-- **Rasgos elegidos:** `gpuls`, `nbumps`, `nbumps2`, `nbumps3`, `energy` (información mutua, k=5; F1 CV 0,283 ± 0,068). Otros: `nbumps` solo 0,291 (la regla original del plan), SHAP 8 rasgos 0,282, los 15 rasgos 0,269. Todos los F1 caen dentro del ruido de la CV (0,258 a 0,291). Limitación: `shift` no quedó entre los rasgos aunque en el EDA tuvo gran diferencia de riesgo
-- **Mejor combinación modelo + balanceo (CV):** Naive Bayes + submuestreo, F1 0,309 ± 0,085 (recall 0,615, precisión 0,207). Le siguen Naive Bayes + SMOTE 0,303, regresión logística + submuestreo 0,298, SVM lineal + submuestreo 0,291 y SVM + submuestreo 0,290; los cinco primeros no se distinguen del ruido (desviación ≈ 0,06). Sin balanceo el F1 promedio es 0,090 y con balanceo 0,234 a 0,250; el submuestreo fue la mejor estrategia en 8 de 12 modelos
-- **Modelo final, umbral y F1 en test:** SVM lineal + submuestreo + calibración sigmoide, `C=0,1`, umbral 0,10. CV: F1 0,333, recall 0,537, precisión 0,242, ROC AUC 0,777. **Test:** F1 0,299, recall 0,471 (16 de 34 turnos peligrosos detectados), precisión 0,219 (57 falsas alarmas entre 482 turnos sin peligro), ROC AUC 0,744, Brier 0,059, accuracy 0,855. Un modelo que siempre dice "sin peligro" saca 0,934 de accuracy y F1 0. Primera versión descartada (regresión logística `C=0,01`): F1 test 0,296, 20 de 34 detectados y 81 falsas alarmas
-- **Limitaciones del modelo final:** el Brier (0,059 en test) mejora solo un 6% frente a decir siempre el 6,6% (0,0616), y ni el grupo de mayor riesgo pasa de ~1 de cada 4 turnos peligrosos; sirve para ordenar turnos por riesgo, no para dar certeza. Las probabilidades sí son interpretables (media predicha en test 0,067 vs 0,066 real). Solo 34 positivos en test; umbral e hiperparámetros elegidos con la misma CV; el test ya se vio una vez
-
-## Preguntas abiertas
-
-- [ ] Nombres y roles de los integrantes (para el README y el informe).
-- [ ] Confirmar con la profesora que un F1 modesto en la clase peligrosa es aceptable si está bien analizado (el problema es difícil de por sí).
-- [ ] Formato y extensión del informe y duración de la presentación.
-- [x] `.gitignore` tenía `models/*.joblib`; ya se quitó (2026-10-06).
-- [x] **Probabilidades del modelo final:** resuelto el 2026-10-06 calibrándolas (sigmoide); la app puede mostrar el riesgo estimado como porcentaje.
-- [x] **Rasgos del notebook 02:** se decidió usar los 5 de información mutua en vez de `nbumps` solo (2026-10-06).
+- Único proyecto del repositorio (desde 2026-10-13); el problema de peligro sísmico que ocupaba la raíz se descartó por acuerdo con la profesora y se eliminó del repositorio.
+- Dataset: Iranian Churn, UCI 563; objetivo binario de abandono.
+- Conservar repeticiones y separar perfiles idénticos por grupos, autorizado por el usuario.
+- Status y Customer Value excluidas inicialmente, según acuerdo en chat. Se conservan las once entradas restantes, incluidos edad y grupo de edad; su redundancia se revisará en el notebook 02.
+- Se conservan las siete filas con cargo de nivel 10, sin corregirlas ni eliminarlas sin evidencia.
+- Partición existente reutilizada: 2.511 filas de entrenamiento y 639 de prueba, sin perfiles compartidos. Grupos definidos por las once entradas, nunca por abandono. Primera partición de StratifiedGroupKFold de cinco pliegues, semilla 42.
+- EDA y comparaciones realizados únicamente sobre entrenamiento. Se entrenó regresión logística de referencia en CV; no hay clasificador final ni evaluación predictiva de prueba.
+- Notebook 02: StandardScaler y las once entradas, sin PCA ni selección ANOVA. F1 CV 0,5972 ± 0,0632, precisión 0,4544 y recall 0,8804. Diferencia pequeña frente a no escalar (0,5948); decisión operativa, no superioridad demostrada.
+- Alcance del 02: tres escalados, PCA 90/95 % y ANOVA k=1..10 con regresión logística balanceada (liblinear). No incluye los demás selectores ni SVM de la versión de minas. La plantilla exportada está sin ajustar; sus pasos se concatenan con los del clasificador, sin anidar Pipeline dentro de imblearn.
+- Notebook 03: 12 clasificadores con cuatro estrategias (sin balanceo, class_weight, SMOTENC y submuestreo; 41 combinaciones), con las diez particiones por grupos del 02 leídas de `02_particiones_cv.csv`. Sobremuestreo con SMOTENC y `quejas` y `plan_tarifario` como categóricas (SMOTE inventó 12 valores inválidos de `plan_tarifario` en la primera partición; SMOTENC ninguno). Candidatos: Stacking+SMOTENC (F1 0,862), Random Forest+class_weight (0,858) y red neuronal sin balancear (0,838). Control de fuga entre particiones sin evidencia de fuga.
+- Notebook 04: hiperparámetros por precisión promedio, calibración sigmoide con puntajes fuera de pliegue, umbral con probabilidades calibradas de entrenamiento y estimación **anidada** por grupos (5 externas, 5 internas). Modelo final: Random Forest con class_weight (400 árboles, profundidad 15, hojas mínimas 1), umbral 0,37. F1 anidado 0,851 ± 0,076; **F1 en prueba 0,857** (IC 95 % por bootstrap de grupos: 0,800 a 0,914), recall 0,874, precisión 0,841, ROC AUC 0,982, Brier 0,035; 90 de 103 abandonos detectados y 17 falsas alarmas entre 536. Empata en la práctica con Stacking y con la red neuronal (diferencia de 0,0024 en F1 anidado). Prueba abierta una sola vez, con todo congelado.
+- El F1 de 0,59 del notebook 02 era de una regresión logística (modelo lineal); la regresión logística vuelve a dar 0,57–0,60 en el 03. Los modelos de árboles llegan a 0,79–0,86 por interacciones (quejas, uso bajo), no por fuga. Cautela abierta: sin fechas no se puede descartar que alguna entrada (uso cero) refleje un abandono ya ocurrido.
+- Cada paso requiere indicación del usuario. No crear notebooks o app durante la preparación del entorno.
 
 ## Bitácora
 
-| Fecha | Quién | Qué se hizo | Resultado / siguiente paso |
-| :--- | :--- | :--- | :--- |
-| 2026-10-10 | Asistente | Auditoría completa a petición del usuario, comparando este proyecto con el de abandono de clientes (`churn/`) para entender por qué el F1 era tan distinto: se reejecutaron los notebooks 01 a 04 completos, se agregó una sección de **estimación anidada** del F1 en el notebook 04 (sin tocar test) y se creó `05_Controles_Rigor.ipynb` | Reejecución sin errores y sin cambios en los resultados ya publicados. Estimación anidada: F1 ≈ 0,304, consistente con el F1 de test (0,299), lo que descarta que el resultado de test haya sido optimista por azar. El notebook 05 (hashes de integridad, validación en bloques temporales por orden de fila y etiquetas permutadas) no encontró evidencia de fuga de información. Generó `resultados/04_estimacion_anidada.csv` y `resultados/05_*.csv`. Falta reflejar estos hallazgos en el informe y la presentación, y hacer commit |
-| 2026-10-07 | Asistente | Se revisaron las celdas y las salidas guardadas del notebook 03 para explicar las 41 combinaciones y la selección de candidatos | Explicación del catálogo, balanceo dentro del pipeline, métricas y gráficas. Se distinguió F1 cero de ausencia de alertas y se aclararon los límites de comparar promedios y desviaciones. Sin modificar ni ejecutar el notebook |
-| 2026-10-07 | Asistente | Se revisaron el código y las salidas guardadas del notebook 02 para explicarlo paso a paso | Explicación de CV, escalado, PCA, selectores y decisión final; se aclaró que VarianceThreshold sí admite pipeline y que ajustarlo antes de CV usa información de las particiones de validación. Sin modificar ni ejecutar el notebook |
-| 2026-10-06 | Asistente | Se leyeron todas las celdas y las salidas guardadas del notebook 01 para explicar su funcionamiento paso a paso | Explicación de carga, exploración, limpieza, phik, partición, codificación y exportación. Sin modificar ni volver a ejecutar el notebook |
-| 2026-10-06 | Asistente | Se revisó la estructura, la documentación, la configuración de ejecución y la metadata para explicar el proyecto y su puesta en marcha | En esta copia se detectó uv 0.12.2 y `uv.lock`, pero no `.venv/Scripts/python.exe`. Los artefactos entrenados están presentes; el primer paso local es `uv sync`. No se instalaron dependencias ni se ejecutaron la app o los notebooks en esta revisión. `graphify-out/GRAPH_REPORT.md` describe otro proyecto (UJIIndoorLoc) |
-| 2026-10-06 | Juan | Se rediseñó `app.py` con la identidad visual de la presentación (tema y CSS propios, encabezado con sismograma, medidor de riesgo animado, turnos reales de ejemplo y tarjetas de métricas) | Misma lógica y mismas pruebas de la sección 9.4 (probadas en navegador y por API). `evaluar_turno` devuelve ahora la tarjeta HTML y se quitó `etiquetas_probabilidad`. En Gradio 6 el tema y el CSS se pasan en `launch()`. Falta probar en Colab |
-| 2026-10-06 | Juan | Se escribieron el informe final (HTML con estilo de impresión y PDF de 22 páginas) y la presentación interactiva en HTML (14 diapositivas con notas del orador, cronómetro, gráficas con los datos reales y un simulador que reproduce el modelo final con diferencia de 10⁻¹⁶ respecto a Python) | Revisados en pantalla y en navegador. Siguiente: ensayar la presentación, probar la app en Colab y que cada integrante corra los 4 notebooks de cero |
-| 2026-10-06 | Juan | Se actualizó el README: resultados finales, calibración, 5 rasgos y nota de transparencia sobre el test | Quedan pendientes: probar la app en Colab, el informe y la presentación, y la revisión cruzada (correr los 4 notebooks de cero) |
-| 2026-10-06 | Juan | Se creó `app.py` (Gradio, 3 pestañas) y se probó en local | Pruebas de la sección 9.4 de PLAN.md: pasan 1 a 5 y la prueba en local (misma probabilidad que el modelo del notebook 04 en los 516 turnos de test, 73 alarmas igual que el notebook, campo vacío y columna faltante con mensaje claro, CSV de 5 y de 516 filas, métricas de "Sobre el modelo" iguales a la metadata, botón de turno al azar con `.then`). **Falta probar en Colab** y subir el commit. El formulario tiene solo los 5 rasgos del modelo y muestra el riesgo estimado en % |
-| 2026-10-06 | Juan | Se creó y ejecutó `04_Ajuste_Evaluacion_Exportacion.ipynb` completo, con cambio de enfoque (calibración de probabilidades) | Genera `modelo_final.joblib`, `metadata_modelo.json`, `ajuste_hiperparametros.csv` y 5 figuras `04_*.png`; el modelo cargado predice igual que el original. Siguiente: `app.py` |
-| 2026-10-06 | Juan | Se creó y ejecutó `03_Balanceo_Comparacion_Modelos.ipynb` completo (41 combinaciones, unos 2 min) | Genera `resultados/comparacion_modelos.csv` y 4 figuras `03_*.png`. Siguiente: notebook 04 |
-| 2026-10-06 | Juan | Se creó y ejecutó `02_Escalado_PCA_Seleccion.ipynb` completo | Genera `decisiones_preprocesamiento.joblib` (MinMaxScaler + 5 rasgos de información mutua), `resultados/comparacion_rasgos.csv` y 10 figuras `02_*.png`. Siguiente: notebook 03 |
-| 2026-10-06 | Juan | Se creó y ejecutó `01_EDA_Limpieza.ipynb` completo y se subió a `main` | Genera `train.csv`, `test.csv`, `test_original.csv`, `mapeos_categoricas.joblib` y 8 figuras `01_*.png`. Se quitó `models/*.joblib` del `.gitignore` |
-| 2026-10-05 | Juan | Se eligió el problema, se creó el plan, `AGENTS.md`, `CLAUDE.md`, `ESTADO.md` y el README | Siguiente: crear el repo, descargar el ARFF y arrancar el notebook 01 |
+- 2026-10-13: tras hablar con la profesora, el equipo se queda solo con este problema (abandono de clientes). Se eliminó del repositorio todo lo del proyecto de peligro sísmico (notebooks, `data/`, `models/`, `resultados/`, `figuras/`, `informe/`, `presentacion/`, `app.py`, `referencia/` y sus `AGENTS.md`/`PLAN.md`/`ESTADO.md`/`pyproject.toml`/`uv.lock`/`.gitignore`/`.python-version`, además de `graphify-out/`, que describía ambos proyectos) y se movió todo el contenido de `churn/` a la raíz del repositorio, que ahora es el único proyecto. Se actualizaron `AGENTS.md`, `CLAUDE.md`, `ESTADO.md` y `README.md` para quitar las referencias al proyecto padre. Los nombres de archivo (notebooks con sufijo `_Churn`, por ejemplo) se dejaron igual para no romper referencias internas. Sin commit todavía, a la espera de que el usuario lo revise.
+
+- 2026-10-10: terminados los pasos 10 y 11 a petición del usuario, después de revisar que los cinco notebooks corrieran sin fallos. Notebook 00 tenía un error al reejecutarse (comprobaciones que exigían que `train.csv`/`test.csv` no existieran): se quitaron esas comprobaciones y se reejecutaron 00, 01 y 02 completos sin errores. Se creó `05_Controles_Rigor_Churn.ipynb` (integridad de archivos y de la partición por perfiles, etiquetas mezcladas al azar, agrupación más estricta de perfiles parecidos y revisión de vecinos cercanos): sin evidencia de fuga mecánica (ROC AUC con etiquetas mezcladas 0,492), pero con grupos más estrictos el F1 baja de 0,859 a 0,811, por lo que el F1 final se reporta como rango (0,81–0,86) y no como cifra única. Se creó `app.py` (formulario, priorización por CSV y pestaña del modelo) y se probó en local contra los 639 clientes de prueba (probabilidades idénticas a las del notebook 04). Se armaron `presentacion/presentacion.html` (14 diapositivas interactivas, mismo motor que la del proyecto de sismos con paleta y datos propios) y `informe/informe.html` con su `Informe_Final.pdf` (24 páginas), siguiendo la misma estructura que el informe del proyecto de sismos. Colab sigue sin probarse. Sin commits.
+
+- 2026-10-10: creados y ejecutados 03_Balanceo_Comparacion_Modelos_Churn.ipynb y 04_Ajuste_Evaluacion_Exportacion_Churn.ipynb a petición del usuario. Generan `comparacion_modelos.csv`, `03_candidatos.csv`, controles de sobremuestreo y de fuga, `ajuste_hiperparametros.csv`, `04_priorizacion_test.csv`, `models/modelo_final.joblib` (diccionario con pipeline, calibrador, umbral y columnas) y `models/metadata_modelo.json`, más figuras `03_*` y `04_*`. Verificada la recarga del modelo (probabilidades y predicciones idénticas). El 04 tardó unos 26 minutos, por encima de los 20 de referencia de las reglas; no se consultó antes. Las conclusiones del 04 se rellenaron sobre el notebook ya ejecutado, sin repetir la ejecución. Colab no probado. Sin commits.
+
+- 2026-10-09: revisión completa de 02_Escalado_PCA_Seleccion_Churn.ipynb. Completadas conclusiones e interpretaciones, guardadas asignaciones de diez particiones y comparación ANOVA, documentados alcance simplificado y sesgo de selección. Añadidas huellas de entradas y parámetros del modelo a decisiones_preprocesamiento.joblib; comprobadas plantilla sin ajustar e integración plana con imblearn. Ejecución completa sin errores de celda en local. StandardScaler gana con 0,5972; PCA 90 % 0,5733, PCA 95 % 0,5716, mejor ANOVA k=10 0,5729. No se consultó prueba. Colab pendiente.
+
+- 2026-10-09: revisado 01_EDA_Limpieza_Churn.ipynb a petición del usuario. Completadas explicaciones y conclusiones con resultados, verificación del original, cobertura de la partición y coherencia de CSV existentes. Documentada correspondencia edad/grupo de edad y guardadas tablas del EDA. Ejecución completa con nbconvert en local; 392 abandonos en entrenamiento (15,61 %), phik de quejas 0,747, segundos de uso 0,464 y frecuencia de uso 0,435. Reserva y CSV originales conservados. Windows requirió ejecución fuera del sandbox para iniciar Jupyter. Colab no probado.
+
+- 2026-10-09: paso 3 completado. Dataset oficial conservado con hashes; auditoría en 00_Auditoria_Datos.ipynb y resultados/AUDITORIA.md. 3.150 filas, 495 abandonos, cero nulos, 300 repeticiones adicionales, 14 perfiles con etiquetas distintas y 7 cargos de nivel 10 fuera de la descripción. Copiadas dos referencias de clase sin modificarlas. Status/Customer Value siguen sin trazabilidad suficiente: propuesta de exclusión inicial, pendiente de acuerdo. No se dividieron datos ni entrenaron modelos. Colab no probado.
+
+- 2026-10-09: paso 2 terminado. Python 3.11.9, entorno `.venv` propio y `uv sync --locked` completado. Verificados los 13 imports principales (incluidos scikit-learn, imbalanced-learn, SHAP, Gradio, ipykernel y nbconvert), misma lista de dependencias que el proyecto anterior y ausencia de CSV/notebooks. El nombre largo impedía cargar un componente de scikit-learn; se recreó el entorno en `churn/` y los imports pasaron. Sin descargas de datos, entrenamiento ni modificaciones del proyecto sísmico. Colab todavía no probado.
+
+Siguiente tarea: si se pide, probar en Google Colab y hacer commit. No avanzar sin indicación del usuario.

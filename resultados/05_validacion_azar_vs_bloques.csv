@@ -1,5 +1,0 @@
-Modelo,Validacion,ROC_AUC,Precision_promedio
-SVM lineal + submuestreo,Al azar,0.7739867753955165,0.2075995063838792
-SVM lineal + submuestreo,Por bloques en el tiempo,0.7779381222894143,0.1948655118055836
-Regresión logística balanceada,Al azar,0.7739524158573087,0.20953097562308007
-Regresión logística balanceada,Por bloques en el tiempo,0.7794117647058822,0.20032199763042746
