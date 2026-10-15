@@ -170,3 +170,5 @@ Siguiente tarea: abrir la presentación y revisarla, reescribir README.md para e
 - 2026-10-15: a petición del usuario se reemplaza en las conclusiones de la presentación la expresión prueba nueva intacta por la descripción del procedimiento: modelo y umbral elegidos con entrenamiento, evaluación final sobre 630 clientes y 99 abandonos. Ajustada también la nota del orador. Solo texto; sin cambios de datos ni ejecución del cuaderno.
 
 - 2026-10-15: eliminada la carpeta .playwright-mcp y sus diez capturas, snapshots y logs a petición del usuario. Añadida a .gitignore para evitar que nuevas revisiones incorporen estos artefactos. Sin cambios en la presentación ni en el cuaderno.
+
+- 2026-10-15: por petición del usuario se consolida propuesta-notebooks-churn sobre main conservando el contenido actual. Verificado tras fetch que origin/main es antecesor de la rama actual y no hay cambios pendientes; la integración se hace por avance directo, sin reescribir historial. Se registra esta operación, se publica main y se elimina propuesta-notebooks-churn local y remota después de verificar la publicación.
