@@ -28,9 +28,7 @@
     "F1 del abandono": 0.9038,
     "Precisión": 0.8624,
     "Recall": 0.9495,
-    "Exactitud": 0.9683,
-    "ROC AUC": 0.9845,
-    "Precisión promedio": 0.8875
+    "Exactitud": 0.9683
   },
   "procedimiento": "Partición 80/20 estratificada; exploración, comparación de 41 combinaciones, ajuste y umbral decididos solo con entrenamiento; prueba ya consultada en la versión anterior, reevaluada sin usarla para seleccionar.",
   "advertencia": "El F1 de prueba proviene de 630 clientes con 99 abandonos y tiene incertidumbre muestral; no constituye una prueba nueva intacta.",
