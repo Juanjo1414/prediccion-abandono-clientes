@@ -1,8 +1,13 @@
 {
-  "modelo": "Red neuronal (MLP)",
-  "estrategia_balanceo": "SMOTENC",
-  "preprocesamiento": "ANOVA k=10",
-  "calibracion": "sigmoide (Platt scaling)",
+  "modelo": "Random Forest",
+  "hiperparametros": {
+    "modelo__max_depth": null,
+    "modelo__min_samples_leaf": 1,
+    "modelo__n_estimators": 400
+  },
+  "estrategia_balanceo": "peso por clase",
+  "calibracion": "sigmoide sobre el modelo completo",
+  "umbral": 0.35,
   "columnas_entrada": [
     "fallas_llamadas",
     "quejas",
@@ -14,40 +19,22 @@
     "numeros_distintos",
     "grupo_edad",
     "plan_tarifario",
-    "edad"
+    "estado",
+    "valor_cliente"
   ],
-  "umbral": 0.41,
-  "hiperparametros": {
-    "balanceo__k_neighbors": "5",
-    "modelo__alpha": "0.001",
-    "modelo__hidden_layer_sizes": "(100, 50)"
-  },
-  "metricas_entrenamiento": {
-    "F1": 0.8616504854368932,
-    "Recall": 0.8964646464646465,
-    "Precision": 0.8294392523364486,
-    "ROC_AUC": 0.9823660332134908,
-    "Brier": 0.032775824492537235
-  },
-  "metricas_anidadas_entrenamiento": {
-    "F1": 0.8616504854368932,
-    "F1_desviacion": 0.0388870130716229,
-    "Recall": 0.8964646464646465,
-    "Precision": 0.8294392523364486,
-    "ROC_AUC": 0.9823660332134908,
-    "Brier": 0.032775824492537235
-  },
+  "f1_validacion": 0.8722,
   "metricas_test": {
-    "F1": 0.8613861386138614,
-    "Recall": 0.8787878787878788,
-    "Precision": 0.8446601941747572,
-    "ROC_AUC": 0.986037398466777,
-    "Precision_promedio": 0.9413102485205083,
-    "Accuracy": 0.9555555555555556,
-    "Brier": 0.03430848048146471
+    "F1 del abandono": 0.9029,
+    "Precisión": 0.8692,
+    "Recall": 0.9394,
+    "Exactitud": 0.9683,
+    "ROC AUC": 0.9861,
+    "Precisión promedio": 0.9209,
+    "Brier": 0.0278
   },
-  "intervalos_bootstrap_test_95": {},
-  "fecha_entrenamiento": "2026-10-13T22:06:21",
+  "procedimiento": "Partición 80/20 estratificada; exploración, comparación de 41 combinaciones, ajuste, calibración y umbral decididos solo con entrenamiento; prueba consultada una vez al final.",
+  "advertencia": "El F1 de prueba proviene de 630 clientes con 99 abandonos y tiene un margen de unas tres centésimas; reportar el desempeño como un rango.",
+  "fecha_entrenamiento": "2026-10-14T19:05:28",
   "version_sklearn": "1.9.1",
   "version_imblearn": "0.14.2"
 }

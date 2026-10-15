@@ -4,7 +4,7 @@ Una tarea por conversación. Consultar ESTADO.md para no repetir trabajo ni resu
 
 1. **Alcance:** anticipar abandono para priorizar contactos; etiqueta binaria y F1 principal. Acordado en chat.
 2. **Carpeta y entorno:** documentación mínima, carpetas de salida, Python 3.11 y uv con dependencias existentes. Verificar imports. No descargar datos ni crear notebooks.
-3. **Auditar dataset:** descargar original UCI 563, registrar fuente y checksum, revisar esquema, clases, nulos, duplicados y disponibilidad temporal. Aclarar Status y Customer Value. Copiar las referencias de clase necesarias antes de crear código de análisis.
+3. **Auditar dataset:** descargar original UCI 563, registrar fuente y checksum, revisar esquema, clases, nulos, duplicados y disponibilidad temporal. Conservar Status y Customer Value según la decisión del 2026-10-14: UCI sitúa las entradas en los primeros nueve meses y Churn al mes doce. Documentar que la fórmula de Customer Value no está detallada. Copiar las referencias de clase necesarias antes de crear código de análisis.
 4. **Reservar test:** usar train_test_split con test_size=0.20, stratify=y y random_state=42, conservando repeticiones y sin agrupar perfiles. Guardar train y test; no cambiar la reserva para mejorar resultados.
 5. **Viabilidad (opcional, omitida por decisión del usuario):** se avanzó directamente al notebook 02. Las comparaciones iniciales se realizan allí; no se crea un notebook 01b.
 6. **Notebook 01:** completar EDA y preparación reutilizando la partición y los resultados anteriores. Explorar train; no volver a elegir la reserva.

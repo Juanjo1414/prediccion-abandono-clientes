@@ -589,7 +589,8 @@ def resumen_modelo():
         tarjetas += ('<div class="kpi"><div class="nombre">{}</div><div class="valor">{}</div><div class="detalle">{}</div></div>').format(
             nombre, formato_numero(prueba[clave], 3), detalle)
 
-    anidadas = m["metricas_anidadas_entrenamiento"]
+    seleccion = m["metricas_seleccion_entrenamiento"]
+    comparacion = m["metricas_comparacion_previa"]
     prioridad = pd.read_csv(RUTA_RESULTADOS + "04_priorizacion_test.csv")
     filas_prioridad = ""
     for i in range(len(prioridad)):
@@ -598,20 +599,17 @@ def resumen_modelo():
             formato_numero(prioridad.loc[i, "Precision"] * 100, 1), formato_numero(prioridad.loc[i, "Recall"] * 100, 1),
             formato_numero(prioridad.loc[i, "Lift"], 1))
 
-    estres = ""
-    ruta_estres = RUTA_RESULTADOS + "05_prueba_estres_grupos.csv"
-    if os.path.exists(ruta_estres):
-        tabla_estres = pd.read_csv(ruta_estres)
-        estres = (" Con una agrupación más estricta (clientes parecidos juntos) el F1 baja a " +
-                  formato_numero(tabla_estres.loc[1, "F1_umbral_0_5"], 2) + "; una lectura prudente es entre " +
-                  formato_numero(tabla_estres.loc[1, "F1_umbral_0_5"], 2) + " y " + formato_numero(prueba["F1"], 2) + ".")
+    estres = " Los controles históricos del notebook 05 corresponden a otra versión y no validan este modelo."
 
     return ('<div class="titulo-tarjeta">Modelo</div><div class="fichas-modelo">' + fichas + "</div>"
             '<div class="titulo-tarjeta">Resultados en la muestra de prueba</div>'
-            '<p class="sub-tarjeta">Clientes que el modelo no vio al ajustarse. Abandono como clase positiva; IC = intervalo de confianza por bootstrap de perfiles.</p>'
+            '<p class="sub-tarjeta">Partición reservada para prueba, ya consultada al diagnosticar la calibración. Esta reevaluación no es una validación nueva intacta. Puede haber perfiles repetidos entre entrenamiento y prueba.</p>'
             '<div class="resumen-lista">' + tarjetas + "</div>"
-            '<p class="sub-tarjeta">Estimación solo con entrenamiento (validación anidada por grupos): F1 de '
-            + formato_numero(anidadas["F1"], 3) + " ± " + formato_numero(anidadas["F1_desviacion"], 3) + ".</p>"
+            '<p class="sub-tarjeta">F1 de selección tras ajuste, calibración y elección de umbral sobre entrenamiento: '
+            + formato_numero(seleccion["F1"], 3) + ". No es validación anidada ni una estimación independiente.</p>"
+            '<p class="sub-tarjeta">Comparación previa al ajuste, con diez particiones estratificadas sin grupos: F1 medio '
+            + formato_numero(comparacion["F1_media"], 3) + "; desviación entre particiones "
+            + formato_numero(comparacion["F1_desviacion"], 3) + ". Corresponde al modelo previo al ajuste.</p>"
             '<div class="titulo-tarjeta" style="margin-top:14px">Si solo se contacta a los de mayor riesgo</div>'
             '<table><thead><tr><th>Se contacta al</th><th>Clientes</th><th>Aciertan</th><th>Abandonos capturados</th><th>Veces mejor que al azar</th></tr></thead>'
             "<tbody>" + filas_prioridad + "</tbody></table>"

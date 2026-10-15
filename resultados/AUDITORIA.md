@@ -26,7 +26,7 @@ La ficha sitúa las entradas en los primeros nueve meses y la etiqueta al mes do
 
 **Customer Value:** se describe como valor calculado del cliente. No se publica su fórmula, unidad ni detalle de entradas de cálculo en la ficha consultada; su disponibilidad requiere confirmación. No inferimos una fórmula a partir de los datos ni inventamos una interpretación monetaria.
 
-**Recomendación para discutir antes del paso 4:** comenzar el piloto sin Status ni Customer Value por trazabilidad insuficiente, mantener una sola representación de edad si se confirma su equivalencia y conservar el nivel observado 10 de Charge Amount documentando la discrepancia. Son propuestas, no cambios ya aplicados ni una selección basada en rendimiento.
+**Decisión actualizada el 2026-10-14:** conservar Status y Customer Value como entradas del nuevo cuaderno paso a paso. [UCI](https://archive.ics.uci.edu/dataset/563/iranian+churn+dataset) declara que las entradas corresponden a los primeros nueve meses y Churn al mes doce. Esta decisión sustituye la propuesta anterior de excluirlas. Se documenta la falta de fórmula/unidad de Customer Value y del criterio preciso de inactividad, sin interpretarla como prueba de fuga. Las restantes revisiones se harán por fases sobre entrenamiento.
 
 Los perfiles agrupados deberán definirse sobre las entradas que se acuerde usar. Excluir columnas puede unir perfiles antes distintos; los conteos de grupos deberán recalcularse antes de separar. Mantener los grupos también en validación cruzada.
 

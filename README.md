@@ -66,7 +66,7 @@ Proyecto final de **Fundamentos de Inteligencia Artificial** — Universidad EIA
 | Aspecto | Detalle |
 | :--- | :--- |
 | Tipo de tarea | Clasificación binaria supervisada |
-| Entrada | 11 variables de los primeros 9 meses: quejas, antigüedad, nivel de cargo, uso (segundos, llamadas, SMS, números distintos), llamadas fallidas, plan tarifario, grupo de edad y edad |
+| Entrada | 13 variables de los primeros 9 meses, incluyendo estado y valor del cliente: quejas, antigüedad, nivel de cargo, uso (segundos, llamadas, SMS, números distintos), llamadas fallidas, plan tarifario, grupo de edad y edad |
 | Salida | `abandono`: 1 = el cliente abandonó en el mes doce, 0 = permaneció |
 | Desbalance | ~15,7% de abandono (495 de 3.150 clientes) |
 | Métrica principal | F1 de la clase que abandona |
@@ -89,73 +89,39 @@ Proyecto final de **Fundamentos de Inteligencia Artificial** — Universidad EIA
 | `grupo_edad` | Grupo de edad, de 1 a 5 | Ordinal |
 | `plan_tarifario` | 1 = pago por uso; 2 = contractual | Nominal binaria |
 | `edad` | Edad (función exacta del grupo: 1→15, 2→25, 3→30, 4→45, 5→55) | Numérica |
+| `estado` | 1 activo; 2 no activo | Categórica binaria |
+| `valor_cliente` | Valor calculado; fórmula y unidad no detalladas por UCI | Numérica |
 | `abandono` | 1 = el cliente abandonó en el mes doce | Objetivo |
 
-`Status` y `Customer Value` vienen en el archivo original pero **no se usan**: el conjunto no documenta con precisión cuándo se miden ni cómo se calculan, y no se puede descartar que ya reflejen el desenlace.
+**Se incluyen `Status` (`estado`) y `Customer Value` (`valor_cliente`) en el nuevo cuaderno paso a paso.** [UCI](https://archive.ics.uci.edu/dataset/563/iranian+churn+dataset) indica que todas las entradas corresponden a los primeros nueve meses y Churn al mes doce. `estado` es categórica (1 activo, 2 no activo). `valor_cliente` es numérica; no se publica su fórmula ni su unidad. La decisión anterior de excluirlas queda sustituida para este flujo.
 
 Fuente: [UCI Machine Learning Repository, id 563](https://archive.ics.uci.edu/dataset/563/iranian+churn+dataset) · Licencia CC BY 4.0.
 
 ## Pipeline de Machine Learning
 
-El trabajo está dividido en seis notebooks, cada uno con una sola responsabilidad, y una app que consume el modelo final. Cada notebook guarda los archivos que necesita el siguiente.
+**El desarrollo actual está en `Churn_Paso_a_Paso.ipynb`, con fases 1 y 2 completas y 13 entradas.** Las fases 3–12 están pendientes. Los notebooks 01–04, `Modelo_Churn_Completo.ipynb`, el modelo exportado y la app corresponden a la versión anterior de 11 entradas y se conservan como respaldo. Sus exclusiones y resultados no describen el nuevo flujo.
+
+El flujo completo anterior está en **`Modelo_Churn_Completo.ipynb`**. Integra las etapas de los notebooks 01–04 y transmite datos, preparación y candidatos en memoria. Para ejecutarlo solo necesita `data/original/Customer Churn.csv`; no requiere CSV intermedios ni decisiones guardadas por otros cuadernos.
 
 ```mermaid
 flowchart LR
-    subgraph Datos["Datos (UCI)"]
-        RAW[("Iranian Churn")]
-    end
-
-    subgraph NB0["00 · Auditoría"]
-        AUD["Esquema · nulos · duplicados\ndominios · Status/Customer Value"]
-    end
-
-    subgraph NB1["01 · EDA y limpieza"]
-        EDA["Análisis exploratorio\nclase · quejas · phik"]
-        GRP["Conservar filas repetidas"]
-        SPLIT["Partición estratificada\n80/20 sin grupos"]
-    end
-
-    subgraph NB2["02 · Escalado y selección"]
-        ESC["Escalado\nsin escalar · MinMax · Standard"]
-        PCA["PCA"]
-        SEL["Selección ANOVA"]
-    end
-
-    subgraph NB3["03 · Balanceo y modelos"]
-        CMP["12 modelos × 4 estrategias\nvalidación cruzada estratificada sin grupos"]
-    end
-
-    subgraph NB4["04 · Ajuste y exportación"]
-        GS["GridSearchCV + calibración"]
-        NEST["Selección de umbral\ncon entrenamiento"]
-        TEST["Evaluación única en prueba"]
-    end
-
-    subgraph NB5["05 · Controles históricos"]
-        CTRL["Etiquetas mezcladas\nagrupación estricta · vecinos"]
-    end
-
-    subgraph APP["App"]
-        GR["Gradio\nformulario · CSV · priorización"]
-    end
-
-    RAW --> AUD --> EDA --> GRP --> SPLIT
-    SPLIT -- "train.csv · test.csv" --> ESC --> PCA --> SEL
-    SEL -- "decisiones_preprocesamiento.joblib" --> CMP
-    CMP -- "comparacion_modelos.csv" --> GS --> NEST --> TEST
-    TEST -- "modelo_final.joblib\nmetadata_modelo.json" --> GR
-    TEST -.-> CTRL
+    RAW[CSV original] --> EDA[Exploración y partición 80/20]
+    EDA --> PREP[Escalado, PCA y ANOVA]
+    PREP --> CMP[41 combinaciones y tres candidatos]
+    CMP --> AJ[Ajuste y calibración sobre train]
+    AJ --> TEST[Evaluación final sobre test]
+    TEST --> APP[Modelo y archivos de apoyo para la app]
 ```
 
-| Notebook | Qué hace | Genera |
-| :--- | :--- | :--- |
-| `00_Auditoria_Datos.ipynb` | Audita el archivo original: esquema, nulos, duplicados, dominios de cada columna, revisión de `Status` y `Customer Value` | `resultados/auditoria_*.csv`, `resultados/AUDITORIA.md` |
-| `01_EDA_Limpieza_Churn.ipynb` | Explora train y separa entrenamiento/prueba con estratificación 80/20, sin grupos | `data/train.csv`, `data/test.csv`, `data/test_original.csv` |
-| `02_Escalado_PCA_Seleccion_Churn.ipynb` | Compara escaladores, PCA y selección ANOVA con validación cruzada estratificada sin grupos | `models/decisiones_preprocesamiento.joblib`, `resultados/comparacion_rasgos.csv` |
-| `03_Balanceo_Comparacion_Modelos_Churn.ipynb` | Evalúa 12 modelos × 4 estrategias de balanceo (41 combinaciones) con CV estratificada sin grupos | `resultados/comparacion_modelos.csv`, `resultados/03_candidatos.csv` |
-| `04_Ajuste_Evaluacion_Exportacion_Churn.ipynb` | Ajusta los 3 candidatos, calibra probabilidades, elige umbral, evalúa en prueba una sola vez y exporta | `models/modelo_final.joblib`, `models/metadata_modelo.json`, `resultados/ajuste_hiperparametros.csv` |
-| `05_Controles_Rigor_Churn.ipynb` | Histórico de la versión anterior; no valida la partición actual. Integridad de la partición, etiquetas mezcladas al azar, agrupación más estricta de perfiles parecidos, vecinos cercanos | `resultados/05_*.csv` |
-| `app.py` | Publica el modelo en una app web | — |
+Las funciones y el catálogo de 12 modelos se definen una sola vez. Todos los modelos tienen grilla de ajuste, incluido Bagging. La validación usa diez particiones estratificadas, sin grupos, y el balanceo ocurre antes de la transformación elegida dentro de cada pliegue.
+
+- **Salida habitual:** `models/modelo_final.joblib`, `models/metadata_modelo.json`, `data/train.csv`, `data/test.csv` y `resultados/04_priorizacion_test.csv`. Los tres CSV se exportan para la app; no se leen para pasar entre etapas del cuaderno.
+- **Tablas y figuras:** se muestran en el cuaderno. Activa `GUARDAR_TABLAS` o `GUARDAR_FIGURAS` para exportarlas también por separado.
+- **Punto de comparación opcional:** activa `GUARDAR_PUNTO_COMPARACION` para guardar `models/punto_comparacion_churn.joblib`. En una ejecución posterior, `REANUDAR_COMPARACION=True` permite saltar a la etapa de ajuste. Regenera el punto si cambias código, datos o dependencias.
+- **Auditoría:** `00_Auditoria_Datos.ipynb` sigue separado y se puede repetir cuando cambie el original.
+- **Originales:** los notebooks 01–04 se conservan como referencia y alternativa modular. El 05 corresponde a controles históricos y no se incorpora a este flujo.
+
+El calibrador ajustado con puntajes fuera de pliegue se conserva junto al umbral elegido; solo el modelo base se reentrena con todo train. Se exportan `metricas_seleccion_entrenamiento` y `metricas_comparacion_previa` por separado: la desviación del modelo anterior al ajuste no acompaña al F1 ajustado. No se exportan métricas llamadas anidadas. Persisten perfiles repetidos entre conjuntos y selección sin validación anidada. El test ya se consultó para diagnosticar la calibración; la reevaluación no es una validación nueva intacta. El informe, la presentación y las secciones históricas de esta documentación requieren actualización independiente.
 
 ## Modelos y estrategias de balanceo
 
@@ -194,6 +160,7 @@ prediccion-abandono-clientes/
 ├── presentacion/
 │   └── presentacion.html                  # Presentación interactiva (se abre en el navegador, sin servidor)
 ├── referencia/                            # Notebooks de clase usados como guía de estilo
+├── Modelo_Churn_Completo.ipynb             # Flujo principal integrado
 ├── 00_Auditoria_Datos.ipynb
 ├── 01_EDA_Limpieza_Churn.ipynb
 ├── 02_Escalado_PCA_Seleccion_Churn.ipynb
@@ -230,7 +197,7 @@ prediccion-abandono-clientes/
 - **F1 de la clase que abandona como métrica principal.** Con 15,7% de positivos el accuracy ya no engaña tanto como en un desbalance extremo, pero sigue premiando al modelo que nunca avisa (84,4% de accuracy con F1 = 0).
 - **Partición estratificada sin grupos.** Se conservan las repeticiones y se mantiene la proporción de abandono con `stratify=y`. No se garantiza separación de perfiles idénticos.
 - **Balanceo dentro del pipeline.** SMOTENC y el submuestreo van dentro de un `Pipeline` de imbalanced-learn, ajustados solo con los datos de entrenamiento de cada partición.
-- **`Status` y `Customer Value` fuera del modelo.** Se dejaron fuera por falta de documentación sobre su construcción, no porque se haya demostrado que filtran el desenlace; tampoco se reintrodujeron para mejorar el resultado.
+- **13 entradas en el cuaderno paso a paso.** Se conservan `estado` y `valor_cliente` siguiendo el periodo de observación documentado por UCI. Esta decisión sustituye la exclusión anterior y no se basa en mejorar el F1.
 - **Set de prueba reservado.** El 20 % se separa en el notebook 01 con semilla 42 y se utiliza para la evaluación final en el 04.
 - **Calibración de probabilidades.** El balanceo distorsiona las probabilidades del modelo; se calibran con una curva sigmoide ajustada sobre predicciones fuera de pliegue, para que la app pueda mostrar un riesgo interpretable.
 - **Validación estratificada.** Los notebooks 02–04 usan diez particiones sin grupos. La versión actual no realiza validación anidada.
@@ -268,25 +235,21 @@ El dataset ya viene incluido en el repositorio (`data/original/`).
 
 ### 3. Seleccionar el kernel en VS Code
 
-Abre la carpeta del proyecto en VS Code, abre `00_Auditoria_Datos.ipynb` y en **Select Kernel → Python Environments** elige el intérprete de `.venv`:
+Abre la carpeta del proyecto en VS Code, abre `Modelo_Churn_Completo.ipynb` y en **Select Kernel → Python Environments** elige el intérprete de `.venv`:
 
 - Windows: `.venv\Scripts\python.exe`
 - macOS / Linux: `.venv/bin/python`
 
-### 4. Ejecutar los notebooks en orden
+### 4. Ejecutar el cuaderno completo
 
-Verifica que la primera celda de cada notebook tenga `EN_COLAB = False` y ejecuta cada uno con **Run All**:
+Abre `Modelo_Churn_Completo.ipynb`, deja `EN_COLAB = False` y usa **Restart → Run All**. No necesitas ejecutar primero los notebooks 01–04. Los datos originales deben estar en `data/original/Customer Churn.csv`.
 
-```text
-00_Auditoria_Datos → 01_EDA_Limpieza_Churn → 02_Escalado_PCA_Seleccion_Churn → 03_Balanceo_Comparacion_Modelos_Churn → 04_Ajuste_Evaluacion_Exportacion_Churn
-```
+Si solo quieres repetir una etapa y mantienes el kernel activo, ejecuta esa sección y las posteriores. Para cerrar la sesión y retomarla desde el ajuste, usa el punto de comparación opcional descrito arriba. `REANUDAR_COMPARACION=False` siempre vuelve a calcular todo desde el original.
 
-El notebook 03 evalúa 41 combinaciones con CV estratificada de 10 particiones sin grupos. El 04 ajusta los tres candidatos con esa misma configuración de CV.
-
-También se pueden ejecutar desde la terminal:
+También puedes ejecutar el flujo desde la terminal:
 
 ```bash
-uv run jupyter nbconvert --to notebook --execute --inplace 00_Auditoria_Datos.ipynb --ExecutePreprocessor.timeout=-1
+uv run jupyter nbconvert --to notebook --execute --inplace Modelo_Churn_Completo.ipynb --ExecutePreprocessor.timeout=1200
 ```
 
 ## Ejecución en Google Colab
@@ -313,7 +276,7 @@ La app se abre en `http://127.0.0.1:7860` y tiene tres pestañas:
 | :--- | :--- |
 | **Evaluar un cliente** | Formulario con las once entradas del modelo, con su descripción. Muestra el riesgo estimado en %, un veredicto según el umbral y los factores que más empujan el riesgo de ese cliente (comparando contra la mediana de entrenamiento). Botones de ejemplo cargan un cliente tranquilo, uno en el límite del umbral, uno en riesgo alto o uno real al azar del set de prueba, mostrando qué ocurrió realmente |
 | **Priorizar contactos** | Recibe un CSV con un cliente por fila (en español o con los nombres originales en inglés de UCI) y devuelve una tabla ordenada por riesgo, con resumen y archivo descargable |
-| **Sobre el modelo** | Modelo, estrategia de balanceo, calibración, escalador, entradas, umbral, métricas de validación anidada y de prueba, fecha de entrenamiento, y la nota sobre el rango 0,81–0,86 |
+| **Sobre el modelo** | Modelo, estrategia de balanceo, calibración, escalador, entradas, umbral, métricas de selección, comparación previa y prueba, fecha de entrenamiento y limitaciones |
 
 En Colab, cambia `EN_COLAB = True` dentro de `app.py` y ejecútalo desde la carpeta del proyecto. Gradio genera un enlace público temporal (`*.gradio.live`).
 
@@ -355,14 +318,14 @@ En el set de prueba el modelo detecta **90 de los 103 abandonos** y da 17 falsas
 | VS Code no muestra `.venv` como kernel | Ejecuta `uv sync` desde la raíz, verifica que las extensiones Python y Jupyter estén habilitadas y usa **Python: Select Interpreter** para elegir `.venv` manualmente. Si no aparece, ejecuta **Developer: Reload Window** |
 | `FileNotFoundError` al cargar los datos | Verifica que `data/original/` tenga el archivo de UCI y que `EN_COLAB = False` en local |
 | `ModuleNotFoundError: imblearn` | El paquete se llama `imbalanced-learn`. En local ejecuta `uv sync`; en Colab, `!pip install imbalanced-learn -q` |
-| La app no encuentra el modelo | Ejecuta los seis notebooks en orden antes de `app.py` |
+| La app no encuentra el modelo | Ejecuta `Modelo_Churn_Completo.ipynb` antes de `app.py` |
 | Falta una dependencia | No uses `pip install` en local. Agrégala con `uv add nombre-del-paquete` y haz commit de `pyproject.toml` y `uv.lock` |
 
 ## Limitaciones conocidas
 
 - Los datos no traen fecha de medición, así que no se puede descartar por completo que alguna entrada (por ejemplo, uso igual a cero) ya refleje un abandono que ya había ocurrido.
 - Hay perfiles idénticos compartidos entre entrenamiento y prueba; los controles históricos del notebook 05 no validan la partición actual.
-- `Status` y `Customer Value` se dejaron fuera por falta de documentación, no porque se haya demostrado que filtran el desenlace.
+- `Status` y `Customer Value` se conservan en el nuevo flujo. La ficha no detalla el criterio operativo de inactividad ni la fórmula y unidad de Customer Value; son límites de interpretación, no una decisión de excluirlas.
 - Los datos son de una sola empresa de telecomunicaciones; no se sabe cómo se comportaría el modelo en otro periodo o mercado.
 - El umbral de 0,37 maximiza el F1, pero el umbral adecuado depende de cuánto cueste contactar a un cliente frente a perderlo; no se estimó ese costo en este trabajo.
 - El modelo ordena a los clientes por riesgo de abandono; no estima si una oferta de retención cambiaría ese riesgo ni cuánto ahorraría.
@@ -370,7 +333,7 @@ En el set de prueba el modelo detecta **90 de los 103 abandonos** y da 17 falsas
 ## Mejoras futuras
 
 - Conseguir datos con fecha para validar con una partición temporal.
-- Revisar `Status` y `Customer Value` con su definición oficial, para decidir con evidencia si pueden usarse.
+- Ampliar la documentación del criterio de inactividad y de la fórmula de Customer Value; su inclusión en el nuevo flujo ya está acordada.
 - Costos asimétricos entre contactar de más y perder un cliente, y selección del umbral a partir de esos costos.
 - Un diseño experimental (A/B) que mida si contactar a los clientes de mayor riesgo reduce el abandono real.
 - Datos de otra empresa o periodo, y despliegue permanente de la app.
