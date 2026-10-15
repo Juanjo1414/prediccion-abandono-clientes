@@ -57,7 +57,7 @@ un proyecto de analítica (entendimiento del negocio, enfoque analítico, requer
 separación de entrenamiento y prueba, entendimiento de los datos, preparación, modelado, ajuste de
 hiperparámetros, calibración y umbral, evaluación final, despliegue) en vez de como secciones técnicas sueltas.
 
-Proyecto final de **Fundamentos de Inteligencia Artificial** — Universidad EIA, 2026-2.
+Proyecto de **Fundamentos de Inteligencia Artificial** — Universidad EIA, 2026-2.
 
 ## Equipo
 
@@ -266,7 +266,7 @@ combinaciones con validación cruzada) es la más pesada del notebook y tarda va
 También se puede ejecutar desde la terminal:
 
 ```bash
-uv run jupyter nbconvert --to notebook --execute --inplace Churn_Paso_a_Paso.ipynb --ExecutePreprocessor.timeout=-1
+uv run python -m nbconvert --to notebook --execute --inplace Churn_Paso_a_Paso.ipynb --ExecutePreprocessor.timeout=-1
 ```
 
 ## Ejecución en Google Colab
@@ -317,7 +317,7 @@ superaron a cualquier subconjunto probado con ANOVA.
 | Recall | — | 0,9394 |
 | Precisión | — | 0,8692 |
 | ROC AUC | — | 0,9861 |
-| Precisión promedio | — | 0,9209 |
+| Precisión promedio | — | 0,9208 |
 | Brier | — | 0,0278 |
 | Exactitud | — | 0,9683 |
 
