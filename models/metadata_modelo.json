@@ -29,12 +29,12 @@
     "Recall": 0.9394,
     "Exactitud": 0.9683,
     "ROC AUC": 0.9861,
-    "Precisión promedio": 0.9208,
+    "Precisión promedio": 0.9209,
     "Brier": 0.0278
   },
   "procedimiento": "Partición 80/20 estratificada; exploración, comparación de 41 combinaciones, ajuste, calibración y umbral decididos solo con entrenamiento; prueba consultada una vez al final.",
   "advertencia": "El F1 de prueba proviene de 630 clientes con 99 abandonos y tiene un margen de unas tres centésimas; reportar el desempeño como un rango.",
-  "fecha_entrenamiento": "2026-10-14T19:55:53",
+  "fecha_entrenamiento": "2026-10-14T20:41:07",
   "version_sklearn": "1.9.1",
   "version_imblearn": "0.14.2"
 }
