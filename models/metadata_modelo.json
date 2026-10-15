@@ -6,8 +6,8 @@
     "modelo__n_estimators": 400
   },
   "estrategia_balanceo": "peso por clase",
-  "calibracion": "sigmoide sobre el modelo completo",
-  "umbral": 0.35,
+  "calibracion": "ninguna",
+  "umbral": 0.5,
   "columnas_entrada": [
     "fallas_llamadas",
     "quejas",
@@ -23,18 +23,18 @@
     "valor_cliente"
   ],
   "f1_validacion": 0.8722,
+  "f1_seleccion_umbral": 0.8742,
   "metricas_test": {
-    "F1 del abandono": 0.9029,
-    "Precisión": 0.8692,
-    "Recall": 0.9394,
+    "F1 del abandono": 0.9038,
+    "Precisión": 0.8624,
+    "Recall": 0.9495,
     "Exactitud": 0.9683,
-    "ROC AUC": 0.9861,
-    "Precisión promedio": 0.9208,
-    "Brier": 0.0278
+    "ROC AUC": 0.9845,
+    "Precisión promedio": 0.8875
   },
-  "procedimiento": "Partición 80/20 estratificada; exploración, comparación de 41 combinaciones, ajuste, calibración y umbral decididos solo con entrenamiento; prueba consultada una vez al final.",
-  "advertencia": "El F1 de prueba proviene de 630 clientes con 99 abandonos y tiene un margen de unas tres centésimas; reportar el desempeño como un rango.",
-  "fecha_entrenamiento": "2026-10-14T21:57:14",
+  "procedimiento": "Partición 80/20 estratificada; exploración, comparación de 41 combinaciones, ajuste y umbral decididos solo con entrenamiento; prueba ya consultada en la versión anterior, reevaluada sin usarla para seleccionar.",
+  "advertencia": "El F1 de prueba proviene de 630 clientes con 99 abandonos y tiene incertidumbre muestral; no constituye una prueba nueva intacta.",
+  "fecha_entrenamiento": "2026-10-15T11:26:19",
   "version_sklearn": "1.9.1",
   "version_imblearn": "0.14.2"
 }

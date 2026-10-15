@@ -1,5 +1,7 @@
 # Estado del proyecto
 
+- 2026-10-15: consulta sobre integrar ramas conservando el contenido de la rama actual en remoto. Rama local observada: propuesta-notebooks-churn. Se explica merge con estrategia ours hacia main; no se ejecutan merge, commit ni push. Hay un posible renombrado pendiente de guardar: Churn_Paso_a_Paso.ipynb figura eliminado y Prediccion_abandono_clientes.ipynb sin seguimiento.
+
 Actualizado: 2026-10-14.
 
 - [x] Paso 1: alcance acordado.
@@ -158,3 +160,5 @@ Siguiente tarea: abrir la presentación y revisarla, reescribir README.md para e
 - 2026-10-14: creado Churn_Paso_a_Paso.ipynb a petición del usuario, con índice enlazado de doce fases y enlaces de retorno. Solo fases 1 y 2 desarrolladas: configuración, importación de pandas, carga del original, tamaño, tipos/nulos, duplicados, renombrado y exclusión de Status/Customer Value. Código directo sin funciones propias y explicaciones sencillas. Ejecución completa con nbconvert sin errores: 3.150 filas, 14 columnas originales, 300 repeticiones conservadas, cero nulos y 11 entradas más abandono tras preparar. Fases 3–12 quedan como encabezados pendientes, sin código. No se modificaron el CSV original, los cuadernos anteriores ni el modelo. Siguiente paso sujeto a indicación: fase 3, partición de entrenamiento y prueba.
 
 - 2026-10-14: incluidas estado y valor_cliente en las fases 1–2 del cuaderno paso a paso. Actualizadas reglas, plan, README y recomendación de auditoría para sustituir la exclusión. Se conservan las 3.150 filas y 13 entradas más abandono. Validado con nbconvert sin errores. No se avanzó a la fase 3 ni se reentrenaron los modelos anteriores.
+
+- 2026-10-15: por decisión del usuario se retira la calibración de Prediccion_abandono_clientes.ipynb (nombre actual del cuaderno). Se eliminan curvas de calibración, Brier y CalibratedClassifierCV. La sección 10 elige únicamente el umbral con probabilidades fuera de pliegue del modelo sin calibrar sobre entrenamiento: barrido 0,05–0,95, corte elegido 0,50, F1 de selección 0,8742, precisión 0,8463, recall 0,9040 y 423 alertas. Modelo final: Pipeline con MinMaxScaler y Random Forest con peso por clase, sin calibrador. Ejecución completa con nbconvert en copia temporal, sin errores; actualizado el cuaderno ejecutado, modelo, metadata y priorización. Prueba reevaluada sin intervenir en la selección: F1 0,9038, precisión 0,8624, recall 0,9495, 94 abandonos detectados, 5 no detectados y 15 falsas alarmas. Se documenta que test ya estaba consultado y esta reevaluación no es una prueba nueva intacta. Probabilidades y predicciones idénticas tras recargar el artefacto. Los datos originales no cambian; Colab no probado.
