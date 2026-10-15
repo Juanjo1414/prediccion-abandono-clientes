@@ -32,7 +32,7 @@
   },
   "procedimiento": "Partición 80/20 estratificada; exploración, comparación de 41 combinaciones, ajuste y umbral decididos solo con entrenamiento; prueba ya consultada en la versión anterior, reevaluada sin usarla para seleccionar.",
   "advertencia": "El F1 de prueba proviene de 630 clientes con 99 abandonos y tiene incertidumbre muestral; no constituye una prueba nueva intacta.",
-  "fecha_entrenamiento": "2026-10-15T11:26:19",
+  "fecha_entrenamiento": "2026-10-15T14:43:04",
   "version_sklearn": "1.9.1",
   "version_imblearn": "0.14.2"
 }
