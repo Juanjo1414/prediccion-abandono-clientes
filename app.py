@@ -1,11 +1,19 @@
 """
 App Gradio: riesgo de abandono de clientes (proyecto de Fundamentos de IA, Universidad EIA).
 
-Carga el modelo que dejó el notebook 04 (models/modelo_final.joblib y models/metadata_modelo.json) y deja:
+Carga el modelo que dejó Churn_Paso_a_Paso.ipynb (models/modelo_final.joblib y models/metadata_modelo.json):
+un único objeto calibrado (Random Forest con peso por clase, calibración sigmoide) que recibe doce entradas
+-las once del dataset original menos la edad, que se quitó por ser idéntica al grupo de edad- y entrega una
+probabilidad de abandono. La app reconstruye la misma partición 80/20 que usó el notebook (misma semilla,
+mismo test_size) para tener los 630 clientes de prueba reales y los valores típicos de los 2.520 de
+entrenamiento, sin depender de archivos intermedios.
+
+Tres pestañas:
   1. Evaluar un cliente: llenar sus datos a mano (o cargar un cliente real de la muestra de prueba) y ver su
-     probabilidad calibrada de abandono, su nivel de riesgo y qué factores empujan ese riesgo.
+     probabilidad de abandono, su nivel de riesgo y qué factores empujan ese riesgo.
   2. Priorizar contactos: subir un CSV con varios clientes y obtener la lista ordenada de mayor a menor riesgo.
-  3. Sobre el modelo: qué modelo es, con qué umbral y qué tan bien funcionó en prueba.
+  3. Sobre el modelo: qué modelo es, con qué umbral, qué tan bien funcionó en prueba, en qué se apoya más y
+     qué pasa si solo se contacta a los clientes de mayor riesgo (con un deslizador en vivo).
 
 Cómo correrla:
   - Local:  uv run python app.py   (se abre en http://127.0.0.1:7860)
@@ -22,6 +30,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import gradio as gr
+from sklearn.model_selection import train_test_split
 
 # Si corremos en Google Colab ponemos True; en el computador (VS Code), False
 EN_COLAB = False
@@ -38,12 +47,23 @@ else:
 # Todas las rutas de la app salen de aquí, para no tener rutas regadas por el código
 RUTA_DATOS = RUTA_BASE + "data/"
 RUTA_MODELOS = RUTA_BASE + "models/"
-RUTA_RESULTADOS = RUTA_BASE + "resultados/"
+RUTA_ORIGINAL = RUTA_DATOS + "original/Customer Churn.csv"
 
-# Campos del formulario, en el orden en que se muestran. La edad no se pide: en estos datos es una función
-# exacta del grupo de edad y se calcula sola.
+# Mismo diccionario que usa el notebook para pasar los nombres de UCI (con espacios dobles) a español.
+# Lo usamos tanto para reconstruir la partición como para aceptar un CSV con los nombres originales.
+TRADUCCION = {
+    "Call  Failure": "fallas_llamadas", "Complains": "quejas", "Subscription  Length": "antiguedad",
+    "Charge  Amount": "nivel_cargo", "Seconds of Use": "segundos_uso", "Frequency of use": "frecuencia_uso",
+    "Frequency of SMS": "frecuencia_sms", "Distinct Called Numbers": "numeros_distintos",
+    "Age Group": "grupo_edad", "Tariff Plan": "plan_tarifario", "Status": "estado", "Age": "edad",
+    "Customer Value": "valor_cliente", "Churn": "abandono",
+}
+
+# Campos del formulario, en el orden en que se muestran (no es el orden que espera el modelo; eso lo maneja
+# COLUMNAS). La edad no se pide: el notebook la quitó por ser una función exacta del grupo de edad.
 NOMBRES_CAMPOS = ["segundos_uso", "frecuencia_uso", "frecuencia_sms", "numeros_distintos", "fallas_llamadas",
-                  "antiguedad", "nivel_cargo", "plan_tarifario", "quejas", "grupo_edad"]
+                  "antiguedad", "nivel_cargo", "plan_tarifario", "estado",
+                  "quejas", "grupo_edad", "valor_cliente"]
 
 ETIQUETAS = {
     "segundos_uso": "Segundos de uso",
@@ -54,9 +74,10 @@ ETIQUETAS = {
     "antiguedad": "Antigüedad (meses)",
     "nivel_cargo": "Nivel de cargo",
     "plan_tarifario": "Plan tarifario",
+    "estado": "Estado de la línea",
     "quejas": "Queja presentada",
     "grupo_edad": "Grupo de edad",
-    "edad": "Edad",
+    "valor_cliente": "Valor del cliente",
 }
 
 DESCRIPCIONES = {
@@ -66,22 +87,22 @@ DESCRIPCIONES = {
     "numeros_distintos": "Cantidad de números distintos a los que llamó",
     "fallas_llamadas": "Llamadas que fallaron",
     "antiguedad": "Meses desde que se suscribió",
-    "nivel_cargo": "Nivel de cargo de 0 a 9 (no son unidades monetarias)",
+    "nivel_cargo": "Nivel de cargo, documentado de 0 a 9 (hay algunos casos de 10); no son unidades monetarias",
     "plan_tarifario": "Tipo de plan contratado",
+    "estado": "Si la línea está activa o no en el momento de la medición. Es la variable que más usa el modelo, "
+              "pero avisa tarde: suele cambiar cuando el cliente ya dejó de usar el servicio",
     "quejas": "Si el cliente presentó alguna queja (no cuenta cuántas)",
     "grupo_edad": "Grupo de edad del cliente, de 1 a 5",
-}
-
-# El archivo original de UCI trae los nombres en inglés (con espacios dobles); aceptamos ambos en el CSV
-TRADUCCION = {
-    "Call  Failure": "fallas_llamadas", "Complains": "quejas", "Subscription  Length": "antiguedad",
-    "Charge  Amount": "nivel_cargo", "Seconds of Use": "segundos_uso", "Frequency of use": "frecuencia_uso",
-    "Frequency of SMS": "frecuencia_sms", "Distinct Called Numbers": "numeros_distintos",
-    "Age Group": "grupo_edad", "Tariff Plan": "plan_tarifario", "Age": "edad",
+    "valor_cliente": "Un valor calculado por la empresa a partir de otras variables; UCI no publica su fórmula "
+                     "ni su unidad, así que no se lee como una cifra en dinero",
 }
 
 OPCIONES_QUEJA = {"No": 0, "Sí": 1}
 OPCIONES_PLAN = {"Pago por uso": 1, "Contractual": 2}
+OPCIONES_ESTADO = {"Activo": 1, "No activo": 2}
+
+# Dominios válidos de las entradas categóricas, para avisar de valores raros al subir un CSV
+DOMINIOS = {"quejas": [0, 1], "plan_tarifario": [1, 2], "estado": [1, 2]}
 
 # Por debajo de este riesgo el cliente es de riesgo bajo. Es una convención de la app (no del modelo) para
 # separar a los clientes sin alerta en dos grupos; el umbral de alerta sí es el del modelo.
@@ -91,10 +112,58 @@ COLOR_BAJO = "#0F8B7A"
 COLOR_MEDIO = "#D97706"
 COLOR_ALTO = "#DC2626"
 
+# En qué se apoya el modelo, calculado en la sección 12.1 de Churn_Paso_a_Paso.ipynb (importancia de Random
+# Forest). Se deja como tabla fija porque viene de un modelo ya calibrado, cuyos árboles no son triviales de
+# recorrer desde aquí; el número que importa (el riesgo de cada cliente) sí se recalcula siempre en vivo.
+IMPORTANCIAS = [("estado", 0.1687), ("segundos_uso", 0.1411), ("frecuencia_uso", 0.1392), ("quejas", 0.1244),
+                ("antiguedad", 0.1007), ("valor_cliente", 0.0949), ("numeros_distintos", 0.0677),
+                ("frecuencia_sms", 0.0626), ("fallas_llamadas", 0.0420), ("grupo_edad", 0.0395),
+                ("nivel_cargo", 0.0177), ("plan_tarifario", 0.0015)]
+
 CABECERA_HTML = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
                  '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
                  '<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&'
                  'family=Fira+Sans+Condensed:wght@500;600;700&family=Fira+Code:wght@500;600&display=swap" rel="stylesheet">')
+
+# Gradio inserta `head=` con innerHTML, así que una etiqueta <script> ahí dentro queda inerte y nunca se
+# ejecuta (es una regla del navegador, no un detalle de Gradio). Por eso la animación de conteo de los números
+# clave se dispara con interfaz.load(..., js=JS_CONTADORES): ese sí es código que Gradio evalúa de verdad.
+# Un observador de mutaciones no basta porque Gradio reemplaza nodos enteros al actualizar un componente (por
+# ejemplo, al mover el deslizador de priorización); un sondeo simple es menos elegante pero nunca pierde el
+# rastro, y el costo es insignificante.
+JS_CONTADORES = """
+() => {
+  if (window.__contadoresListos) { return; }
+  window.__contadoresListos = true;
+  var sinMovimiento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function formatear(valor, decimales, sufijo) {
+    return valor.toFixed(decimales).replace(".", ",") + sufijo;
+  }
+  function animar(el) {
+    el.setAttribute("data-animado", "1");
+    var destino = parseFloat(el.getAttribute("data-valor"));
+    var decimales = parseInt(el.getAttribute("data-decimales") || "0", 10);
+    var sufijo = el.getAttribute("data-sufijo") || "";
+    if (sinMovimiento || isNaN(destino)) { el.textContent = formatear(destino, decimales, sufijo); return; }
+    var inicio = null;
+    var duracion = 900;
+    function paso(marca) {
+      if (!inicio) { inicio = marca; }
+      var avance = Math.min((marca - inicio) / duracion, 1);
+      var suave = 1 - Math.pow(1 - avance, 3);
+      el.textContent = formatear(destino * suave, decimales, sufijo);
+      if (avance < 1) { requestAnimationFrame(paso); }
+    }
+    requestAnimationFrame(paso);
+  }
+  function recorrer() {
+    var elementos = document.querySelectorAll(".contar:not([data-animado])");
+    for (var i = 0; i < elementos.length; i++) { animar(elementos[i]); }
+  }
+  setInterval(recorrer, 400);
+  recorrer();
+}
+"""
 
 ESTILOS_CSS = """
 :root {
@@ -136,6 +205,11 @@ button[role="tab"][aria-selected="true"] { color: var(--tinta) !important; borde
 .sub-tarjeta { color: var(--suave); font-size: 15px; margin: 0 0 8px; line-height: 1.4; }
 .grupo-form { font-family: var(--titulo); font-size: 17px; font-weight: 600; color: var(--azul); margin: 10px 0 0; padding-bottom: 4px; border-bottom: 1px solid var(--borde); }
 .tarjeta label span, .tarjeta .block-info { font-size: 14px; }
+/* El grupo de botones de sí/no (queja, plan, estado) pone el nombre del campo en un <span> aparte del
+   <label>, con un gris casi blanco por defecto; lo oscurecemos para que se lea igual que los demás campos.
+   La descripción de cada campo (.info-text) también venía muy clara; la bajamos a un gris legible. */
+.tarjeta span.has-info, .tarjeta legend { color: var(--texto) !important; opacity: 1 !important; }
+.tarjeta .info-text, .gradio-container .info-text { color: var(--suave) !important; }
 .tarjeta input[type="number"] { font-family: var(--numero); font-size: 17px !important; }
 
 /* Botones */
@@ -160,7 +234,7 @@ button[role="tab"][aria-selected="true"] { color: var(--tinta) !important; borde
 .factores h4 { font-family: var(--titulo); font-size: 17px; font-weight: 600; margin: 0 0 8px; color: var(--tinta); }
 .factor { display: grid; grid-template-columns: 1fr 120px 52px; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0; }
 .factor .barra { height: 10px; background: var(--papel); border-radius: 5px; position: relative; overflow: hidden; }
-.factor .barra i { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+.factor .barra i { position: absolute; top: 0; bottom: 0; border-radius: 5px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
 .factor .barra i.sube { left: 50%; background: var(--alto); } .factor .barra i.baja { right: 50%; background: var(--bajo); }
 .factor .valor { font-family: var(--numero); font-size: 13px; text-align: right; }
 .nota-factores { color: var(--suave); font-size: 12.5px; margin-top: 6px; line-height: 1.35; }
@@ -173,7 +247,7 @@ button[role="tab"][aria-selected="true"] { color: var(--tinta) !important; borde
 
 /* Resumen de la lista y del modelo */
 .resumen-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 10px 0; }
-.kpi { background: var(--papel); border-radius: 12px; padding: 12px 14px; }
+.kpi { background: var(--papel); border-radius: 12px; padding: 12px 14px; transition: transform .2s; }
 .kpi .nombre { color: var(--suave); font-size: 13px; }
 .kpi .valor { font-family: var(--numero); font-size: 26px; font-weight: 600; color: var(--tinta); line-height: 1.15; }
 .kpi .detalle { color: var(--suave); font-size: 12.5px; }
@@ -181,9 +255,45 @@ button[role="tab"][aria-selected="true"] { color: var(--tinta) !important; borde
 .fichas-modelo span { background: var(--tinta); color: #E8EEF8; border-radius: 8px; padding: 5px 12px; font-size: 14px; }
 .nota-modelo { border-left: 4px solid var(--ambar); background: #FEF9E7; border-radius: 0 10px 10px 0; padding: 12px 16px; margin-top: 14px; font-size: 15px; line-height: 1.45; }
 .gradio-container table { font-variant-numeric: tabular-nums; }
+/* El encabezado de la tabla de resultados, el menú de cada columna ("Ordenar ascendente", "Filter"...) y los
+   avisos emergentes (toasts) traen de Gradio un fondo oscuro con nuestro color de letra general (oscuro)
+   encima: texto invisible. Esas celdas internas ya usan "!important" con dos clases (especificidad 0,2,x),
+   así que para ganarles hace falta más especificidad, no solo "!important". Repetimos ".gradio-container"
+   tres veces seguidas y sin espacio: sigue siendo la misma clase sobre el mismo elemento (el contenedor de
+   la app, que ya existe), pero cuenta tres veces para la especificidad. */
+.gradio-container.gradio-container.gradio-container table thead,
+.gradio-container.gradio-container.gradio-container table th {
+  background: var(--tinta) !important;
+  color: #fff !important;
+}
+.gradio-container.gradio-container.gradio-container .cell-menu,
+.gradio-container.gradio-container.gradio-container .cell-menu button {
+  background: var(--tinta) !important;
+  color: #fff !important;
+}
+.gradio-container.gradio-container.gradio-container .cell-menu button:hover { background: var(--azul) !important; }
+.gradio-container.gradio-container.gradio-container .toast-body,
+.gradio-container.gradio-container.gradio-container .toast-body * {
+  color: #fff !important;
+}
 .pie { text-align: center; color: var(--suave); font-size: 13px; padding: 14px 0 4px; }
 
-@media (max-width: 760px) { .appbar { padding: 20px; } .appbar h1 { font-size: 30px; } .factor { grid-template-columns: 1fr 80px 48px; } }
+/* Importancia de cada variable */
+.importancias { margin: 8px 0 4px; }
+.importancia { display: grid; grid-template-columns: 170px 1fr 54px; gap: 10px; align-items: center; font-size: 14px; margin: 7px 0; }
+.importancia .nombre-imp { color: var(--texto); }
+.importancia .pista { height: 12px; background: var(--papel); border-radius: 6px; overflow: hidden; }
+.importancia .relleno { height: 100%; background: var(--azul); border-radius: 6px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
+.importancia .valor-imp { font-family: var(--numero); font-size: 13px; text-align: right; color: var(--suave); }
+
+/* Priorización en vivo */
+.priorizacion { margin-top: 8px; }
+.priorizacion .deslizador-info { color: var(--suave); font-size: 14px; margin: 6px 0 2px; }
+.barra-cobertura { height: 22px; background: var(--papel); border-radius: 11px; overflow: hidden; margin: 10px 0; display: flex; }
+.barra-cobertura .capturado { background: var(--bajo); transition: width .4s cubic-bezier(.2,.8,.2,1); }
+.barra-cobertura .restante { background: var(--borde); transition: width .4s cubic-bezier(.2,.8,.2,1); }
+
+@media (max-width: 760px) { .appbar { padding: 20px; } .appbar h1 { font-size: 30px; } .factor { grid-template-columns: 1fr 80px 48px; } .importancia { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .appbar .senal rect, .resultado .anillo .progreso { animation: none; } }
 """
 
@@ -194,67 +304,76 @@ ICONO_ALERTA = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
                 '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>')
 
 
+def reconstruir_particion():
+    """
+    Reconstruye la misma partición 80/20 que usó Churn_Paso_a_Paso.ipynb: lee el archivo original de UCI, le
+    pone los mismos nombres en español, separa entrenamiento y prueba con la misma semilla y el mismo tamaño,
+    y quita la edad (se eliminó por ser idéntica al grupo de edad). No depende de ningún CSV intermedio, así
+    que no se desactualiza si otro cuaderno sobrescribe data/train.csv. Devuelve X_train, X_test y y_test.
+    """
+    datos = pd.read_csv(RUTA_ORIGINAL).rename(columns=TRADUCCION)
+    X = datos.drop(columns="abandono")
+    y = datos["abandono"]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+    X_train = X_train.drop(columns="edad").reset_index(drop=True)
+    X_test = X_test.drop(columns="edad").reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    return X_train, y_train, X_test, y_test
+
+
 def cargar_artefactos():
     """
-    Lee lo que dejaron los notebooks: el modelo final (pipeline, calibrador, umbral y columnas), la metadata,
-    los datos de entrenamiento (para los valores típicos y los rangos) y los clientes reales de prueba que
-    sirven de ejemplo. Devuelve las cuatro cosas, en ese orden.
+    Lee lo que dejó el notebook: el modelo final (un único objeto calibrado, el umbral y las columnas que
+    espera) y la metadata con sus métricas. Reconstruye además la partición de entrenamiento y prueba.
+    Devuelve, en ese orden: el artefacto, la metadata, el entrenamiento y los clientes de prueba (con su
+    abandono real) que sirven de ejemplo.
     """
     artefacto = joblib.load(RUTA_MODELOS + "modelo_final.joblib")
     with open(RUTA_MODELOS + "metadata_modelo.json", encoding="utf-8") as archivo:
         metadata = json.load(archivo)
-    train = pd.read_csv(RUTA_DATOS + "train.csv")
-    clientes_ejemplo = pd.read_csv(RUTA_DATOS + "test.csv")
-    return artefacto, metadata, train, clientes_ejemplo
+    train, y_train, X_test, y_test = reconstruir_particion()
+    clientes_ejemplo = X_test.copy()
+    clientes_ejemplo["abandono"] = y_test
+    return artefacto, metadata, train, clientes_ejemplo, float(y_train.mean())
 
 
 # Se cargan una sola vez, al abrir la app. Los botones de Gradio no pueden recibir parámetros extra, así que
 # las funciones de abajo leen estas variables globales (solo las leen, nunca las modifican)
-ARTEFACTO, METADATA, TRAIN, EJEMPLOS = cargar_artefactos()
+ARTEFACTO, METADATA, TRAIN, EJEMPLOS, TASA_ABANDONO_TRAIN = cargar_artefactos()
 COLUMNAS = ARTEFACTO["columnas_entrada"]
 UMBRAL = ARTEFACTO["umbral"]
 
 
-def obtener_puntaje(pipeline, X):
-    """
-    Devuelve un puntaje continuo para cada fila de X: la función de decisión si el modelo la tiene y, si no,
-    el logit de la probabilidad que predice. Es lo que recibe el calibrador (copia del notebook 04).
-    """
-    if hasattr(pipeline, "decision_function"):
-        return np.asarray(pipeline.decision_function(X)).ravel()
-    probabilidades = np.clip(pipeline.predict_proba(X)[:, 1], 1e-6, 1 - 1e-6)
-    return np.log(probabilidades / (1 - probabilidades))
-
-
 def predecir_probabilidad(X):
     """
-    Recibe un DataFrame con las columnas de entrada del modelo y devuelve la probabilidad calibrada de abandono
-    de cada fila: primero el puntaje del pipeline y luego el calibrador, igual que en el notebook 04.
+    Recibe un DataFrame con las columnas de entrada del modelo y devuelve la probabilidad calibrada de
+    abandono de cada fila. El modelo exportado ya es un único objeto (pipeline y calibración juntos), así
+    que basta con llamar a predict_proba.
     """
-    puntajes = obtener_puntaje(ARTEFACTO["pipeline"], X[COLUMNAS])
-    return ARTEFACTO["calibrador"].predict_proba(puntajes.reshape(-1, 1))[:, 1]
+    return ARTEFACTO["modelo"].predict_proba(X[COLUMNAS])[:, 1]
 
 
 def calcular_referencias(train):
     """
-    Calcula, con los datos de entrenamiento, el valor típico (mediana) y el rango de cada entrada, y la edad que
-    corresponde a cada grupo de edad. Devuelve tres diccionarios: medianas, rangos y edad por grupo.
+    Calcula, con los datos de entrenamiento, el valor típico (mediana) y el rango de cada entrada. Devuelve
+    dos diccionarios: medianas y rangos.
     """
     medianas = {}
     rangos = {}
     for columna in COLUMNAS:
         medianas[columna] = float(train[columna].median())
         rangos[columna] = (float(train[columna].min()), float(train[columna].max()))
-    edad_por_grupo = {}
-    for grupo, edad in train.groupby("grupo_edad")["edad"].first().items():
-        edad_por_grupo[int(grupo)] = int(edad)
-    return medianas, rangos, edad_por_grupo
+    return medianas, rangos
 
 
-MEDIANAS, RANGOS, EDAD_POR_GRUPO = calcular_referencias(TRAIN)
+MEDIANAS, RANGOS = calcular_referencias(TRAIN)
 
-# Probabilidad de cada cliente de prueba, calculada una vez; sirve para elegir clientes de ejemplo según su riesgo
+# Probabilidad de cada cliente de prueba, calculada una vez; sirve para elegir clientes de ejemplo según su
+# riesgo y para el panel de priorización en vivo de la pestaña "Sobre el modelo"
 PROBABILIDADES_EJEMPLOS = predecir_probabilidad(EJEMPLOS)
+ORDEN_POR_RIESGO = np.argsort(-PROBABILIDADES_EJEMPLOS, kind="stable")
+ABANDONOS_PRUEBA = int(EJEMPLOS["abandono"].sum())
 
 
 def formato_numero(valor, decimales):
@@ -264,8 +383,9 @@ def formato_numero(valor, decimales):
 
 def nivel_de_riesgo(probabilidad):
     """
-    Clasifica una probabilidad en bajo, medio o alto. Alto es desde el umbral del modelo (la alerta); medio, entre
-    RIESGO_BAJO_HASTA y el umbral; bajo, por debajo. Devuelve el nombre del nivel, su color y la acción sugerida.
+    Clasifica una probabilidad en bajo, medio o alto. Alto es desde el umbral del modelo (la alerta); medio,
+    entre RIESGO_BAJO_HASTA y el umbral; bajo, por debajo. Devuelve el nombre del nivel, su color y la acción
+    sugerida.
     """
     if probabilidad >= UMBRAL:
         return "alto", COLOR_ALTO, "Incluir en la lista de contacto prioritario de retención."
@@ -276,8 +396,9 @@ def nivel_de_riesgo(probabilidad):
 
 def anillo_svg(probabilidad, color):
     """
-    Dibuja el anillo del riesgo como SVG: una pista gris, un arco de progreso del color del nivel y el porcentaje
-    en el centro. Lo hacemos a mano para poder animarlo con CSS sin depender de ninguna librería gráfica.
+    Dibuja el anillo del riesgo como SVG: una pista gris, un arco de progreso del color del nivel y el
+    porcentaje en el centro. Lo hacemos a mano para poder animarlo con CSS sin depender de ninguna librería
+    gráfica.
     """
     radio = 78
     circunferencia = 2 * math.pi * radio
@@ -299,8 +420,12 @@ def valor_para_mostrar(nombre, valor):
         return "Sí" if int(valor) == 1 else "No"
     if nombre == "plan_tarifario":
         return "Contractual" if int(valor) == 2 else "Pago por uso"
+    if nombre == "estado":
+        return "No activo" if int(valor) == 2 else "Activo"
     if nombre == "grupo_edad":
         return "Grupo " + str(int(valor))
+    if nombre == "valor_cliente":
+        return formato_numero(valor, 2)
     return str(int(round(valor))) if float(valor).is_integer() else formato_numero(valor, 1)
 
 
@@ -308,16 +433,14 @@ def factores_de_riesgo(fila, probabilidad):
     """
     Calcula qué entradas empujan el riesgo de este cliente. Para cada entrada sustituye su valor por el valor
     típico de los clientes de entrenamiento (la mediana) y mira cuánto cambia la probabilidad: si baja, esa
-    entrada estaba empujando el riesgo hacia arriba. El grupo de edad y la edad se cambian juntos.
-    Devuelve una lista de (nombre, cambio en puntos de probabilidad) ordenada de mayor a menor efecto.
+    entrada estaba empujando el riesgo hacia arriba. Devuelve una lista de (nombre, cambio en puntos de
+    probabilidad) ordenada de mayor a menor efecto.
     """
     nombres = []
     variantes = []
-    for nombre in NOMBRES_CAMPOS:
+    for nombre in COLUMNAS:
         variante = fila.copy()
         variante[nombre] = MEDIANAS[nombre]
-        if nombre == "grupo_edad":
-            variante["edad"] = MEDIANAS["edad"]
         nombres.append(nombre)
         variantes.append(variante)
     probabilidades_variantes = predecir_probabilidad(pd.DataFrame(variantes))
@@ -365,7 +488,7 @@ def aviso_fuera_de_rango(fila):
     (el modelo extrapola mal fuera de lo que vio); si no, devuelve un texto vacío.
     """
     fuera = []
-    for nombre in NOMBRES_CAMPOS:
+    for nombre in COLUMNAS:
         minimo, maximo = RANGOS[nombre]
         if fila[nombre] < minimo or fila[nombre] > maximo:
             fuera.append(ETIQUETAS[nombre].lower())
@@ -377,15 +500,16 @@ def aviso_fuera_de_rango(fila):
 
 def texto_resultado(fila, probabilidad):
     """
-    Arma la tarjeta de resultado en HTML: nivel de riesgo, anillo con la probabilidad, acción sugerida, el umbral
-    y el riesgo normal para dar contexto, los factores que empujan el riesgo y los avisos si hay datos atípicos.
+    Arma la tarjeta de resultado en HTML: nivel de riesgo, anillo con la probabilidad, acción sugerida, el
+    umbral y el abandono promedio para dar contexto, los factores que empujan el riesgo y los avisos si hay
+    datos atípicos.
     """
     nivel, color, accion = nivel_de_riesgo(probabilidad)
     nombre_nivel = {"bajo": "Riesgo bajo", "medio": "Riesgo medio", "alto": "Riesgo alto"}[nivel]
     icono = ICONO_BAJO if nivel == "bajo" else ICONO_ALERTA
     fichas = ('<div class="fichas"><span class="ficha">Umbral de alerta: {}%</span>'
               '<span class="ficha">Abandono promedio en los datos: {}%</span></div>').format(
-                  formato_numero(UMBRAL * 100, 0), formato_numero(TRAIN["abandono"].mean() * 100, 1))
+                  formato_numero(UMBRAL * 100, 0), formato_numero(TASA_ABANDONO_TRAIN * 100, 1))
     return ('<div class="resultado"><span class="nivel {nivel}">{icono}{nombre}</span>{anillo}'
             '<div class="accion">{accion}</div>{fichas}</div>{factores}{aviso}').format(
                 nivel=nivel, icono=icono, nombre=nombre_nivel, anillo=anillo_svg(probabilidad, color), accion=accion,
@@ -407,8 +531,9 @@ def texto_valor_real(abandono):
 
 def convertir_valor(nombre, valor):
     """
-    Convierte lo que entrega un campo del formulario a un número que entiende el modelo ('Sí' pasa a 1, 'Contractual'
-    a 2, etc.). Si el campo está vacío lanza un gr.Error que dice cuál falta, en vez de dejar que la app se rompa.
+    Convierte lo que entrega un campo del formulario a un número que entiende el modelo ('Sí' pasa a 1,
+    'Contractual' a 2, 'Activo' a 1, etc.). Si el campo está vacío lanza un gr.Error que dice cuál falta, en
+    vez de dejar que la app se rompa.
     """
     if valor is None or (isinstance(valor, float) and math.isnan(valor)) or valor == "":
         raise gr.Error("Falta completar: " + ETIQUETAS[nombre] + ".")
@@ -416,6 +541,8 @@ def convertir_valor(nombre, valor):
         return OPCIONES_QUEJA[valor]
     if nombre == "plan_tarifario":
         return OPCIONES_PLAN[valor]
+    if nombre == "estado":
+        return OPCIONES_ESTADO[valor]
     numero = float(valor)
     if numero < 0:
         raise gr.Error(ETIQUETAS[nombre] + " no puede ser negativo.")
@@ -425,14 +552,11 @@ def convertir_valor(nombre, valor):
 def fila_desde_valores(valores):
     """
     Arma la fila de entradas del modelo a partir de los valores del formulario (en el orden de NOMBRES_CAMPOS).
-    La edad no se pide: se calcula a partir del grupo de edad. Devuelve una Series con las columnas del modelo.
+    Devuelve una Series con las columnas en el orden que espera el modelo.
     """
     fila = {}
     for nombre, valor in zip(NOMBRES_CAMPOS, valores):
         fila[nombre] = convertir_valor(nombre, valor)
-    if int(fila["grupo_edad"]) not in EDAD_POR_GRUPO:
-        raise gr.Error("El grupo de edad debe ser un número del 1 al 5.")
-    fila["edad"] = EDAD_POR_GRUPO[int(fila["grupo_edad"])]
     return pd.Series(fila)[COLUMNAS]
 
 
@@ -460,6 +584,8 @@ def valores_cliente(posicion):
             salida.append("Sí" if int(valor) == 1 else "No")
         elif nombre == "plan_tarifario":
             salida.append("Contractual" if int(valor) == 2 else "Pago por uso")
+        elif nombre == "estado":
+            salida.append("No activo" if int(valor) == 2 else "Activo")
         elif nombre == "grupo_edad":
             salida.append(int(valor))
         else:
@@ -492,13 +618,11 @@ def cargar_cliente_en_riesgo():
 
 def preparar_tabla_clientes(df):
     """
-    Deja un CSV listo para el modelo: acepta los nombres en español o los originales en inglés, calcula la edad si
-    solo viene el grupo de edad y revisa que estén todas las columnas y que no haya vacíos ni valores negativos.
-    Si algo falla lanza un gr.Error que dice qué columnas faltan o cuáles tienen problemas.
+    Deja un CSV listo para el modelo: acepta los nombres en español o los originales en inglés, revisa que
+    estén las doce columnas y que no haya vacíos, valores negativos o categorías raras. Si algo falla lanza un
+    gr.Error que dice qué columnas faltan o cuáles tienen problemas.
     """
     df = df.rename(columns=TRADUCCION)
-    if "edad" not in df.columns and "grupo_edad" in df.columns:
-        df["edad"] = df["grupo_edad"].map(EDAD_POR_GRUPO)
 
     faltantes = []
     for columna in COLUMNAS:
@@ -513,8 +637,12 @@ def preparar_tabla_clientes(df):
     for columna in COLUMNAS:
         if tabla[columna].isna().any() or (tabla[columna] < 0).any():
             con_problemas.append(columna)
+        elif columna in DOMINIOS:
+            valores_validos = tabla[columna].isin(DOMINIOS[columna])
+            if not valores_validos.all():
+                con_problemas.append(columna)
     if len(con_problemas) > 0:
-        raise gr.Error("Hay valores vacíos, no numéricos o negativos en: " + ", ".join(con_problemas) + ".")
+        raise gr.Error("Hay valores vacíos, negativos o fuera de lo esperado en: " + ", ".join(con_problemas) + ".")
     return tabla
 
 
@@ -536,9 +664,9 @@ def resumen_lista(probabilidades):
 
 def priorizar_csv(ruta):
     """
-    Ordena a los clientes de un archivo CSV de mayor a menor riesgo de abandono. Devuelve el resumen en HTML, la
-    tabla (posición, fila del archivo, probabilidad, nivel y acción sugerida) y la ruta de un CSV con la misma
-    lista para descargar. Si no hay archivo lanza un gr.Error.
+    Ordena a los clientes de un archivo CSV de mayor a menor riesgo de abandono. Devuelve el resumen en HTML,
+    la tabla (posición, fila del archivo, probabilidad, nivel y acción sugerida) y la ruta de un CSV con la
+    misma lista para descargar. Si no hay archivo lanza un gr.Error.
     """
     if ruta is None:
         raise gr.Error("Primero sube un archivo CSV.")
@@ -566,70 +694,110 @@ def priorizar_csv(ruta):
     return resumen_lista(probabilidades), ranking, ruta_salida
 
 
+def html_importancias():
+    """
+    Arma el bloque "En qué se apoya el modelo": una barra por entrada con la importancia que calculó Random
+    Forest, de mayor a menor. Viene de la sección 12.1 del notebook (ver comentario de IMPORTANCIAS).
+    """
+    filas = ""
+    mayor = IMPORTANCIAS[0][1]
+    for nombre, importancia in IMPORTANCIAS:
+        ancho = importancia / mayor * 100
+        filas += ('<div class="importancia"><span class="nombre-imp">{nombre}</span>'
+                  '<div class="pista"><div class="relleno" style="width:{ancho:.0f}%"></div></div>'
+                  '<span class="valor-imp">{valor}</span></div>').format(
+                      nombre=ETIQUETAS[nombre], ancho=ancho, valor=formato_numero(importancia, 3))
+    return ('<div class="titulo-tarjeta" style="margin-top:18px">En qué se apoya el modelo</div>'
+            '<p class="sub-tarjeta">Cuánto usó cada entrada Random Forest para separar a los clientes, de mayor a menor. '
+            'No dice si empuja hacia el abandono o en contra, solo cuánto se apoyó en esa entrada.</p>'
+            '<div class="importancias">' + filas + '</div>'
+            '<p class="sub-tarjeta">El estado de la línea encabeza la lista, pero es un indicador tardío: suele cambiar '
+            'cuando el cliente ya dejó de usar el servicio, así que avisa con poco margen de maniobra.</p>')
+
+
+def calcular_priorizacion_dinamica(cantidad):
+    """
+    Recalcula en vivo qué pasaría si solo se contactara a los "cantidad" clientes de mayor riesgo de los 630
+    de la muestra de prueba: cuántos de ellos abandonaron de verdad, qué porcentaje de aciertos es y qué
+    porcentaje de todos los abandonos reales queda cubierto. Reproduce la sección 11.6 del notebook, pero para
+    cualquier cantidad que se mueva en el deslizador.
+    """
+    cantidad = int(cantidad)
+    primeros = ORDEN_POR_RIESGO[:cantidad]
+    capturados = int(EJEMPLOS.iloc[primeros]["abandono"].sum())
+    aciertos = capturados / cantidad if cantidad > 0 else 0.0
+    cobertura = capturados / ABANDONOS_PRUEBA if ABANDONOS_PRUEBA > 0 else 0.0
+    veces_mejor_que_azar = aciertos / (ABANDONOS_PRUEBA / len(EJEMPLOS))
+    capturado_pct = cobertura * 100
+
+    return ('<p class="deslizador-info">Contactando a los <b>{cantidad}</b> clientes de mayor riesgo (de 630 de prueba):</p>'
+            '<div class="resumen-lista">'
+            '<div class="kpi"><div class="nombre">Abandonos capturados</div>'
+            '<div class="valor contar" data-valor="{capturados}" data-decimales="0">0</div>'
+            '<div class="detalle">de {total} abandonos reales en la prueba</div></div>'
+            '<div class="kpi"><div class="nombre">Aciertan</div>'
+            '<div class="valor contar" data-valor="{aciertos_pct:.1f}" data-decimales="1" data-sufijo="%">0%</div>'
+            '<div class="detalle">de cada llamada hecha</div></div>'
+            '<div class="kpi"><div class="nombre">Veces mejor que al azar</div>'
+            '<div class="valor contar" data-valor="{veces:.1f}" data-decimales="1" data-sufijo="×">0×</div>'
+            '<div class="detalle">frente a contactar sin ordenar</div></div></div>'
+            '<div class="barra-cobertura"><div class="capturado" style="width:{capturado_pct:.1f}%"></div>'
+            '<div class="restante" style="width:{restante_pct:.1f}%"></div></div>'
+            '<p class="sub-tarjeta">Cubre el {capturado_pct_texto}% de todos los abandonos de la prueba.</p>').format(
+                cantidad=cantidad, capturados=capturados, total=ABANDONOS_PRUEBA,
+                aciertos_pct=aciertos * 100, veces=veces_mejor_que_azar, capturado_pct=capturado_pct,
+                restante_pct=max(0.0, 100.0 - capturado_pct), capturado_pct_texto=formato_numero(capturado_pct, 1))
+
+
 def resumen_modelo():
     """
-    Arma el HTML de la pestaña "Sobre el modelo" con lo que guardó el notebook 04 en la metadata: modelo, estrategia,
-    umbral, métricas en prueba con su intervalo, estimación de entrenamiento, qué ocurre al contactar solo a los de
-    mayor riesgo, y cómo leer todo con prudencia.
+    Arma el HTML de la pestaña "Sobre el modelo" con lo que guardó el notebook en la metadata: modelo,
+    estrategia de balanceo, calibración, umbral, métricas en prueba frente a la estimación de validación, en
+    qué se apoya el modelo y el panel de priorización (su valor inicial; el deslizador lo recalcula después).
     """
     m = METADATA
     fichas = ""
-    for texto in [m["modelo"], "Balanceo: " + m["estrategia_balanceo"], "Probabilidades calibradas (sigmoide)",
-                  "Preprocesamiento: " + m["preprocesamiento"], "Umbral de alerta: " + formato_numero(m["umbral"], 2)]:
+    for texto in [m["modelo"], "Balanceo: " + m["estrategia_balanceo"], "Calibración: " + m["calibracion"],
+                  "Umbral de alerta: " + formato_numero(m["umbral"], 2)]:
         fichas += "<span>" + texto + "</span>"
 
     prueba = m["metricas_test"]
-    intervalos = m["intervalos_bootstrap_test_95"]
     tarjetas = ""
-    for clave, nombre in [("F1", "F1"), ("Recall", "Recall"), ("Precision", "Precisión"), ("ROC_AUC", "ROC AUC"),
-                          ("Precision_promedio", "Precisión promedio"), ("Brier", "Brier")]:
-        detalle = ""
-        if clave in intervalos:
-            detalle = "IC 95 %: " + formato_numero(intervalos[clave][0], 2) + " a " + formato_numero(intervalos[clave][1], 2)
-        tarjetas += ('<div class="kpi"><div class="nombre">{}</div><div class="valor">{}</div><div class="detalle">{}</div></div>').format(
-            nombre, formato_numero(prueba[clave], 3), detalle)
-
-    seleccion = m["metricas_seleccion_entrenamiento"]
-    comparacion = m["metricas_comparacion_previa"]
-    prioridad = pd.read_csv(RUTA_RESULTADOS + "04_priorizacion_test.csv")
-    filas_prioridad = ""
-    for i in range(len(prioridad)):
-        filas_prioridad += ("<tr><td>{}%</td><td>{}</td><td>{}%</td><td>{}%</td><td>{}</td></tr>").format(
-            int(round(prioridad.loc[i, "Fraccion_contactada"] * 100)), int(prioridad.loc[i, "Clientes"]),
-            formato_numero(prioridad.loc[i, "Precision"] * 100, 1), formato_numero(prioridad.loc[i, "Recall"] * 100, 1),
-            formato_numero(prioridad.loc[i, "Lift"], 1))
-
-    estres = " Los controles históricos del notebook 05 corresponden a otra versión y no validan este modelo."
+    for clave in ["F1 del abandono", "Recall", "Precisión", "Exactitud", "ROC AUC", "Precisión promedio", "Brier"]:
+        tarjetas += ('<div class="kpi"><div class="nombre">{}</div>'
+                     '<div class="valor contar" data-valor="{}" data-decimales="3">0</div></div>').format(
+                         clave, prueba[clave])
 
     return ('<div class="titulo-tarjeta">Modelo</div><div class="fichas-modelo">' + fichas + "</div>"
             '<div class="titulo-tarjeta">Resultados en la muestra de prueba</div>'
-            '<p class="sub-tarjeta">Partición reservada para prueba, ya consultada al diagnosticar la calibración. Esta reevaluación no es una validación nueva intacta. Puede haber perfiles repetidos entre entrenamiento y prueba.</p>'
+            '<p class="sub-tarjeta">630 clientes reservados desde el inicio, con 99 abandonos; el modelo nunca los vio '
+            'durante el entrenamiento ni para elegir el umbral.</p>'
             '<div class="resumen-lista">' + tarjetas + "</div>"
-            '<p class="sub-tarjeta">F1 de selección tras ajuste, calibración y elección de umbral sobre entrenamiento: '
-            + formato_numero(seleccion["F1"], 3) + ". No es validación anidada ni una estimación independiente.</p>"
-            '<p class="sub-tarjeta">Comparación previa al ajuste, con diez particiones estratificadas sin grupos: F1 medio '
-            + formato_numero(comparacion["F1_media"], 3) + "; desviación entre particiones "
-            + formato_numero(comparacion["F1_desviacion"], 3) + ". Corresponde al modelo previo al ajuste.</p>"
-            '<div class="titulo-tarjeta" style="margin-top:14px">Si solo se contacta a los de mayor riesgo</div>'
-            '<table><thead><tr><th>Se contacta al</th><th>Clientes</th><th>Aciertan</th><th>Abandonos capturados</th><th>Veces mejor que al azar</th></tr></thead>'
-            "<tbody>" + filas_prioridad + "</tbody></table>"
-            '<div class="nota-modelo"><b>Cómo leerlo.</b> El modelo ordena bien a los clientes por riesgo, pero es una herramienta para '
-            "priorizar contactos: no estima si una oferta evitará el abandono ni promete ahorros." + estres
-            + " Los datos no traen fechas, así que no se puede comprobar si alguna entrada (por ejemplo, el uso igual a cero) ya reflejaba "
-            "un abandono ocurrido, ni cómo se comportaría en otro periodo o mercado.<br><br><b>Entrenado el</b> "
-            + m["fecha_entrenamiento"] + " con scikit-learn " + m["version_sklearn"] + ". Proyecto académico.</div>")
+            '<p class="sub-tarjeta">En validación cruzada (solo entrenamiento) el F1 fue ' + formato_numero(m["f1_validacion"], 3)
+            + '. ' + m["advertencia"] + '</p>'
+            + html_importancias()
+            + '<div class="nota-modelo"><b>Cómo leerlo.</b> El modelo ordena bien a los clientes por riesgo, pero es una '
+            'herramienta para priorizar contactos: no estima si una oferta evitará el abandono ni promete ahorros. '
+            'Los datos no traen fechas ni identificador de cliente, así que no se puede comprobar el orden de los hechos '
+            'cliente por cliente ni cómo se comportaría el modelo en otro periodo o mercado. Las filas repetidas se '
+            'trataron como clientes distintos, porque el archivo no trae identificador.'
+            '<br><br><b>Entrenado el</b> ' + m["fecha_entrenamiento"][:10] + " con scikit-learn " + m["version_sklearn"]
+            + " e imbalanced-learn " + m["version_imblearn"] + ". Proyecto académico.</div>")
 
 
 def crear_campo(nombre):
     """
-    Devuelve el campo del formulario para una entrada: un grupo de botones para las opciones de sí o no (queja y plan),
-    un menú para el grupo de edad o un campo numérico para el resto. Todos llevan su descripción y empiezan vacíos.
+    Devuelve el campo del formulario para una entrada: un grupo de botones para las opciones de sí/no o
+    activo/no activo, un menú para el grupo de edad o un campo numérico para el resto. Todos llevan su
+    descripción y empiezan vacíos.
     """
     descripcion = DESCRIPCIONES[nombre]
     if nombre == "quejas":
         return gr.Radio(choices=list(OPCIONES_QUEJA.keys()), value=None, label=ETIQUETAS[nombre], info=descripcion)
     if nombre == "plan_tarifario":
         return gr.Radio(choices=list(OPCIONES_PLAN.keys()), value=None, label=ETIQUETAS[nombre], info=descripcion)
+    if nombre == "estado":
+        return gr.Radio(choices=list(OPCIONES_ESTADO.keys()), value=None, label=ETIQUETAS[nombre], info=descripcion)
     if nombre == "grupo_edad":
         return gr.Dropdown(choices=[1, 2, 3, 4, 5], value=None, label=ETIQUETAS[nombre], info=descripcion)
     return gr.Number(value=None, minimum=0, label=ETIQUETAS[nombre], info=descripcion)
@@ -642,11 +810,11 @@ def encabezado_html():
     for i in range(5):
         alto = 14 + i * 9
         barras += '<rect x="{}" y="{}" width="9" height="{}" rx="2"/>'.format(i * 13, 52 - alto, alto)
-    datos = [("F1 en prueba", formato_numero(prueba["F1"], 2)), ("Recall", formato_numero(prueba["Recall"], 2)),
-             ("ROC AUC", formato_numero(prueba["ROC_AUC"], 2))]
+    datos = [("F1 del abandono", prueba["F1 del abandono"]), ("Recall", prueba["Recall"]), ("ROC AUC", prueba["ROC AUC"])]
     chips = ""
     for nombre, valor in datos:
-        chips += '<div class="dato"><b>{}</b><span>{}</span></div>'.format(valor, nombre)
+        chips += ('<div class="dato"><b class="contar" data-valor="{}" data-decimales="2">0</b>'
+                  '<span>{}</span></div>').format(valor, nombre)
     return ('<div class="appbar"><div class="marca"><svg class="senal" viewBox="0 0 62 52" aria-hidden="true">' + barras + "</svg>"
             "<div><h1>Riesgo de abandono de clientes</h1><p>Estima la probabilidad de que un cliente de telecomunicaciones abandone "
             "al final del mes doce, a partir de sus primeros nueve meses, para decidir a quién contactar primero.</p></div></div>"
@@ -655,8 +823,8 @@ def encabezado_html():
 
 def crear_tema():
     """
-    Crea el tema de Gradio con los colores del proyecto. Definimos también las variables del modo oscuro con los
-    mismos valores para que la app se vea igual aunque el navegador esté en modo oscuro.
+    Crea el tema de Gradio con los colores del proyecto. Definimos también las variables del modo oscuro con
+    los mismos valores para que la app se vea igual aunque el navegador esté en modo oscuro.
     """
     tema = gr.themes.Base(
         primary_hue=gr.themes.colors.amber,
@@ -671,16 +839,35 @@ def crear_tema():
         block_background_fill="#FFFFFF", block_background_fill_dark="#FFFFFF",
         block_border_color="#DCE4EF", block_border_color_dark="#DCE4EF",
         block_label_text_color="#334155", block_label_text_color_dark="#334155",
+        block_label_background_fill="#F4F7FB", block_label_background_fill_dark="#F4F7FB",
+        block_label_border_color="#DCE4EF", block_label_border_color_dark="#DCE4EF",
         input_background_fill="#F8FAFC", input_background_fill_dark="#F8FAFC",
         button_primary_background_fill="#F59E0B", button_primary_background_fill_dark="#F59E0B",
         button_primary_text_color="#0B1B33", button_primary_text_color_dark="#0B1B33",
+        # Las opciones de los campos de sí/no (quejas, plan, estado) usaban el gris medio del tema (neutral_hue),
+        # que con letra oscura encima quedaba casi ilegible. Las dejamos claras cuando no están elegidas y con
+        # acento azul, bien marcado, cuando sí.
+        checkbox_label_background_fill="#FFFFFF", checkbox_label_background_fill_dark="#FFFFFF",
+        checkbox_label_background_fill_hover="#EFF4FB", checkbox_label_background_fill_hover_dark="#EFF4FB",
+        checkbox_label_background_fill_selected="#1E40AF", checkbox_label_background_fill_selected_dark="#1E40AF",
+        checkbox_label_text_color="#0F172A", checkbox_label_text_color_dark="#0F172A",
+        checkbox_label_text_color_selected="#FFFFFF", checkbox_label_text_color_selected_dark="#FFFFFF",
+        checkbox_label_border_color="#DCE4EF", checkbox_label_border_color_dark="#DCE4EF",
+        checkbox_label_border_color_hover="#1E40AF", checkbox_label_border_color_hover_dark="#1E40AF",
+        checkbox_label_border_color_selected="#1E40AF", checkbox_label_border_color_selected_dark="#1E40AF",
+        checkbox_background_color_selected="#1E40AF", checkbox_background_color_selected_dark="#1E40AF",
+        checkbox_border_color_selected="#1E40AF", checkbox_border_color_selected_dark="#1E40AF",
+        table_text_color="#0F172A", table_text_color_dark="#0F172A",
+        table_even_background_fill="#F8FAFC", table_even_background_fill_dark="#F8FAFC",
+        table_odd_background_fill="#FFFFFF", table_odd_background_fill_dark="#FFFFFF",
     )
 
 
 def construir_interfaz():
     """
-    Arma la interfaz con gr.Blocks y sus tres pestañas (evaluar un cliente, priorizar contactos con un CSV y sobre el
-    modelo) y conecta los botones con las funciones. Devuelve la app lista para lanzar con el tema y los estilos.
+    Arma la interfaz con gr.Blocks y sus tres pestañas (evaluar un cliente, priorizar contactos con un CSV y
+    sobre el modelo) y conecta los botones con las funciones. Devuelve la app lista para lanzar con el tema y
+    los estilos.
     """
     with gr.Blocks(title="Riesgo de abandono de clientes") as interfaz:
         gr.HTML(encabezado_html())
@@ -699,15 +886,18 @@ def construir_interfaz():
                         campos.append(crear_campo("frecuencia_sms"))
                         campos.append(crear_campo("numeros_distintos"))
                         campos.append(crear_campo("fallas_llamadas"))
-                    gr.HTML('<div class="grupo-form">Cuenta</div>')
+                    gr.HTML('<div class="grupo-form">Cuenta y estado de la línea</div>')
                     with gr.Row():
                         campos.append(crear_campo("antiguedad"))
                         campos.append(crear_campo("nivel_cargo"))
                     with gr.Row():
                         campos.append(crear_campo("plan_tarifario"))
+                        campos.append(crear_campo("estado"))
+                    gr.HTML('<div class="grupo-form">Quejas, perfil y valor</div>')
+                    with gr.Row():
                         campos.append(crear_campo("quejas"))
-                    gr.HTML('<div class="grupo-form">Perfil</div>')
-                    campos.append(crear_campo("grupo_edad"))
+                        campos.append(crear_campo("grupo_edad"))
+                        campos.append(crear_campo("valor_cliente"))
                     boton_evaluar = gr.Button("Evaluar cliente", variant="primary", size="lg")
                     gr.HTML('<p class="sub-tarjeta" style="margin-top:12px">Clientes reales de ejemplo (de la muestra de prueba)</p>')
                     with gr.Row():
@@ -729,8 +919,8 @@ def construir_interfaz():
         with gr.Tab("Priorizar contactos"):
             with gr.Column(elem_classes="tarjeta"):
                 gr.HTML('<div class="titulo-tarjeta">Lista de clientes ordenada por riesgo</div>'
-                        '<p class="sub-tarjeta">Sube un CSV con un cliente por fila. Sirven los nombres en español o los originales en inglés. '
-                        'El modelo usa estas columnas: <b>' + ", ".join(COLUMNAS) + '</b> (si falta la edad se calcula desde el grupo de edad).</p>')
+                        '<p class="sub-tarjeta">Sube un CSV con un cliente por fila. Sirven los nombres en español o los originales en inglés de UCI. '
+                        'El modelo usa estas columnas: <b>' + ", ".join(COLUMNAS) + '</b>.</p>')
                 archivo = gr.File(label="Archivo CSV", file_types=[".csv"], type="filepath")
                 boton_csv = gr.Button("Ordenar por riesgo", variant="primary", size="lg")
                 resumen = gr.HTML()
@@ -741,9 +931,20 @@ def construir_interfaz():
         with gr.Tab("Sobre el modelo"):
             with gr.Column(elem_classes="tarjeta"):
                 gr.HTML(resumen_modelo())
+                gr.HTML('<div class="titulo-tarjeta" style="margin-top:18px">Si solo se contacta a los de mayor riesgo</div>'
+                        '<p class="sub-tarjeta">Mueve el deslizador: así se vería priorizar las llamadas de retención con '
+                        'este modelo, usando los 630 clientes reales de la muestra de prueba.</p>')
+                deslizador_prioridad = gr.Slider(minimum=10, maximum=len(EJEMPLOS), step=5, value=100,
+                                                 label="Clientes a contactar")
+                panel_prioridad = gr.HTML(calcular_priorizacion_dinamica(100), elem_classes="priorizacion")
+            deslizador_prioridad.change(calcular_priorizacion_dinamica, inputs=deslizador_prioridad, outputs=panel_prioridad)
 
         gr.HTML('<div class="pie">Fundamentos de Inteligencia Artificial · Universidad EIA · 2026-2 · '
                 'Datos: Iranian Churn (UCI 563)</div>')
+
+        # Arranca la animación de conteo de los números clave; el sondeo que deja activo sigue atrapando
+        # los números nuevos que aparezcan después (al evaluar un cliente o mover el deslizador).
+        interfaz.load(None, None, None, js=JS_CONTADORES)
     return interfaz
 
 
