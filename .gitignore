@@ -10,5 +10,3 @@ Thumbs.db
 # El modelo entrenado no se versiona: pesa unos 50 MB y se regenera ejecutando Churn_Paso_a_Paso.ipynb
 models/*.joblib
 
-# Artefactos locales de revisión del navegador
-.playwright-mcp/
