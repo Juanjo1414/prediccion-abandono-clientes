@@ -7,6 +7,13 @@ flagged/
 .DS_Store
 Thumbs.db
 
+# Archivos de trabajo locales, no se suben
+CLAUDE.md
+PLAN.md
+catalogo_jpl_asteroides.ipynb
+pipeline_asteroides.ipynb
+Prediccion_abandono_recall.ipynb
+
 # El modelo entrenado no se versiona: pesa unos 50 MB y se regenera ejecutando Churn_Paso_a_Paso.ipynb
 models/*.joblib
 

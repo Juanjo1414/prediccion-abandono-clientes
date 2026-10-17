@@ -1,8 +1,8 @@
 """
 App Gradio: riesgo de abandono de clientes (proyecto de Fundamentos de IA, Universidad EIA).
 
-Carga el modelo que dejó Churn_Paso_a_Paso.ipynb (models/modelo_final.joblib y models/metadata_modelo.json):
-un único objeto calibrado (Random Forest con peso por clase, calibración sigmoide) que recibe doce entradas
+Carga el modelo que dejó Prediccion_abandono_clientes_Original.ipynb (models/modelo_final.joblib y models/metadata_modelo.json):
+un único Pipeline sin calibrar (escalador y Random Forest con peso por clase) que recibe doce entradas
 -las once del dataset original menos la edad, que se quitó por ser idéntica al grupo de edad- y entrega una
 probabilidad de abandono. La app reconstruye la misma partición 80/20 que usó el notebook (misma semilla,
 mismo test_size) para tener los 630 clientes de prueba reales y los valores típicos de los 2.520 de
@@ -112,9 +112,9 @@ COLOR_BAJO = "#0F8B7A"
 COLOR_MEDIO = "#D97706"
 COLOR_ALTO = "#DC2626"
 
-# En qué se apoya el modelo, calculado en la sección 12.1 de Churn_Paso_a_Paso.ipynb (importancia de Random
-# Forest). Se deja como tabla fija porque viene de un modelo ya calibrado, cuyos árboles no son triviales de
-# recorrer desde aquí; el número que importa (el riesgo de cada cliente) sí se recalcula siempre en vivo.
+# En qué se apoya el modelo, calculado en la sección 12.1 de Prediccion_abandono_clientes_Original.ipynb
+# (importancia de Random Forest). Se deja como tabla fija para no recorrer los árboles desde aquí; el número
+# que importa (el riesgo de cada cliente) sí se recalcula siempre en vivo.
 IMPORTANCIAS = [("estado", 0.1687), ("segundos_uso", 0.1411), ("frecuencia_uso", 0.1392), ("quejas", 0.1244),
                 ("antiguedad", 0.1007), ("valor_cliente", 0.0949), ("numeros_distintos", 0.0677),
                 ("frecuencia_sms", 0.0626), ("fallas_llamadas", 0.0420), ("grupo_edad", 0.0395),
@@ -306,7 +306,7 @@ ICONO_ALERTA = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 def reconstruir_particion():
     """
-    Reconstruye la misma partición 80/20 que usó Churn_Paso_a_Paso.ipynb: lee el archivo original de UCI, le
+    Reconstruye la misma partición 80/20 que usó Prediccion_abandono_clientes_Original.ipynb: lee el archivo original de UCI, le
     pone los mismos nombres en español, separa entrenamiento y prueba con la misma semilla y el mismo tamaño,
     y quita la edad (se eliminó por ser idéntica al grupo de edad). No depende de ningún CSV intermedio, así
     que no se desactualiza si otro cuaderno sobrescribe data/train.csv. Devuelve X_train, X_test y y_test.
@@ -324,7 +324,7 @@ def reconstruir_particion():
 
 def cargar_artefactos():
     """
-    Lee lo que dejó el notebook: el modelo final (un único objeto calibrado, el umbral y las columnas que
+    Lee lo que dejó el notebook: el modelo final (el Pipeline entrenado, el umbral y las columnas que
     espera) y la metadata con sus métricas. Reconstruye además la partición de entrenamiento y prueba.
     Devuelve, en ese orden: el artefacto, la metadata, el entrenamiento y los clientes de prueba (con su
     abandono real) que sirven de ejemplo.
@@ -347,9 +347,9 @@ UMBRAL = ARTEFACTO["umbral"]
 
 def predecir_probabilidad(X):
     """
-    Recibe un DataFrame con las columnas de entrada del modelo y devuelve la probabilidad calibrada de
-    abandono de cada fila. El modelo exportado ya es un único objeto (pipeline y calibración juntos), así
-    que basta con llamar a predict_proba.
+    Recibe un DataFrame con las columnas de entrada del modelo y devuelve la probabilidad de abandono de
+    cada fila. El modelo exportado ya es un único Pipeline (escalador y Random Forest juntos), así que
+    basta con llamar a predict_proba.
     """
     return ARTEFACTO["modelo"].predict_proba(X[COLUMNAS])[:, 1]
 
@@ -764,6 +764,8 @@ def resumen_modelo():
     prueba = m["metricas_test"]
     tarjetas = ""
     for clave in ["F1 del abandono", "Recall", "Precisión", "Exactitud", "ROC AUC", "Precisión promedio", "Brier"]:
+        if clave not in prueba:
+            continue
         tarjetas += ('<div class="kpi"><div class="nombre">{}</div>'
                      '<div class="valor contar" data-valor="{}" data-decimales="3">0</div></div>').format(
                          clave, prueba[clave])
@@ -810,7 +812,7 @@ def encabezado_html():
     for i in range(5):
         alto = 14 + i * 9
         barras += '<rect x="{}" y="{}" width="9" height="{}" rx="2"/>'.format(i * 13, 52 - alto, alto)
-    datos = [("F1 del abandono", prueba["F1 del abandono"]), ("Recall", prueba["Recall"]), ("ROC AUC", prueba["ROC AUC"])]
+    datos = [("F1 del abandono", prueba["F1 del abandono"]), ("Recall", prueba["Recall"]), ("Precisión", prueba["Precisión"])]
     chips = ""
     for nombre, valor in datos:
         chips += ('<div class="dato"><b class="contar" data-valor="{}" data-decimales="2">0</b>'

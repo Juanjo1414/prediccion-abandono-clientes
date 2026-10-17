@@ -1,0 +1,341 @@
+{
+  "modelo": "Red neuronal",
+  "seleccion_de_rasgos": "Todos los rasgos",
+  "k_rasgos": null,
+  "rasgos_que_ve_el_modelo": [
+    "fallas_llamadas",
+    "quejas",
+    "antiguedad",
+    "nivel_cargo",
+    "segundos_uso",
+    "frecuencia_uso",
+    "frecuencia_sms",
+    "numeros_distintos",
+    "grupo_edad",
+    "plan_tarifario",
+    "estado",
+    "valor_cliente"
+  ],
+  "escalador": "MinMaxScaler",
+  "balanceo": "RandomUnderSampler",
+  "hiperparametros": {
+    "activation": "relu",
+    "alpha": 0.010368090560355392,
+    "batch_size": "auto",
+    "beta_1": 0.9,
+    "beta_2": 0.999,
+    "early_stopping": false,
+    "epsilon": 1e-08,
+    "hidden_layer_sizes": [
+      32,
+      16
+    ],
+    "learning_rate": "constant",
+    "learning_rate_init": 0.007887102624766478,
+    "max_fun": 15000,
+    "max_iter": 300,
+    "momentum": 0.9,
+    "n_iter_no_change": 10,
+    "nesterovs_momentum": true,
+    "power_t": 0.5,
+    "random_state": 42,
+    "shuffle": true,
+    "solver": "adam",
+    "tol": 0.0001,
+    "validation_fraction": 0.1,
+    "verbose": false,
+    "warm_start": false
+  },
+  "umbral": 0.34,
+  "piso_precision": 0.6,
+  "columnas_entrada": [
+    "fallas_llamadas",
+    "quejas",
+    "antiguedad",
+    "nivel_cargo",
+    "segundos_uso",
+    "frecuencia_uso",
+    "frecuencia_sms",
+    "numeros_distintos",
+    "grupo_edad",
+    "plan_tarifario",
+    "estado",
+    "valor_cliente"
+  ],
+  "validacion_cruzada_matriz": {
+    "recall": 0.9596794871794871,
+    "precision": 0.6762236722013362,
+    "f1": 0.7930721265770457
+  },
+  "validacion_anidada": {
+    "recall": 0.9545512820512819,
+    "desviacion_recall": 0.025993745630300366,
+    "precision": 0.6684355185294335,
+    "f1": 0.784327984105088
+  },
+  "metricas_test": {
+    "Recall": 0.9595959595959596,
+    "Precisión": 0.6834532374100719,
+    "F1": 0.7983193277310925,
+    "Exactitud": 0.9238095238095239,
+    "ROC AUC": 0.9800642964484773,
+    "Precisión promedio": 0.9091234328765571
+  },
+  "procedimiento": "Partición 80/20 estratificada; hiperparámetros, método de selección, ganador y umbral decididos solo con entrenamiento; prueba ya consultada en el cuaderno original, medida una sola vez aquí sin usarla para seleccionar.",
+  "advertencia": "La cifra de prueba proviene de 630 clientes con 99 abandonos y tiene incertidumbre muestral; no constituye una prueba nueva intacta.",
+  "psi_referencia": {
+    "fallas_llamadas": {
+      "tipo": "deciles",
+      "bordes": [
+        0.0,
+        2.700000000000159,
+        5.0,
+        6.0,
+        8.0,
+        10.0,
+        13.0,
+        18.0
+      ],
+      "proporciones": [
+        0.0,
+        0.3,
+        0.09087301587301587,
+        0.07857142857142857,
+        0.10119047619047619,
+        0.09841269841269841,
+        0.1130952380952381,
+        0.11468253968253968,
+        0.10317460317460317
+      ]
+    },
+    "quejas": {
+      "tipo": "categorias",
+      "valores": [
+        0.0,
+        1.0
+      ],
+      "proporciones": [
+        0.9198412698412698,
+        0.08015873015873017
+      ]
+    },
+    "antiguedad": {
+      "tipo": "deciles",
+      "bordes": [
+        19.0,
+        27.0,
+        31.0,
+        34.0,
+        35.0,
+        36.0,
+        38.0,
+        39.0,
+        41.0
+      ],
+      "proporciones": [
+        0.09801587301587301,
+        0.0884920634920635,
+        0.08452380952380953,
+        0.11825396825396825,
+        0.06666666666666667,
+        0.07063492063492063,
+        0.16507936507936508,
+        0.08333333333333333,
+        0.12063492063492064,
+        0.10436507936507937
+      ]
+    },
+    "nivel_cargo": {
+      "tipo": "deciles",
+      "bordes": [
+        0.0,
+        1.0,
+        2.0,
+        3.0
+      ],
+      "proporciones": [
+        0.0,
+        0.5543650793650794,
+        0.20238095238095238,
+        0.1253968253968254,
+        0.11785714285714285
+      ]
+    },
+    "segundos_uso": {
+      "tipo": "deciles",
+      "bordes": [
+        510.0,
+        1143.0,
+        1747.1000000000004,
+        2366.0,
+        2990.0,
+        3990.999999999998,
+        5703.0,
+        6986.6,
+        10698.499999999996
+      ],
+      "proporciones": [
+        0.0992063492063492,
+        0.1007936507936508,
+        0.1,
+        0.1,
+        0.0992063492063492,
+        0.1007936507936508,
+        0.0996031746031746,
+        0.1003968253968254,
+        0.1,
+        0.1
+      ]
+    },
+    "frecuencia_uso": {
+      "tipo": "deciles",
+      "bordes": [
+        9.0,
+        21.0,
+        33.0,
+        43.0,
+        54.0,
+        69.0,
+        86.0,
+        107.20000000000005,
+        160.0
+      ],
+      "proporciones": [
+        0.09722222222222222,
+        0.09841269841269841,
+        0.10158730158730159,
+        0.10158730158730159,
+        0.09841269841269841,
+        0.0996031746031746,
+        0.10158730158730159,
+        0.10158730158730159,
+        0.09841269841269841,
+        0.10158730158730159
+      ]
+    },
+    "frecuencia_sms": {
+      "tipo": "deciles",
+      "bordes": [
+        0.0,
+        1.0,
+        7.0,
+        13.0,
+        21.0,
+        32.399999999999864,
+        55.0,
+        148.0,
+        239.0999999999999
+      ],
+      "proporciones": [
+        0.0,
+        0.1884920634920635,
+        0.06349206349206349,
+        0.14047619047619048,
+        0.09722222222222222,
+        0.11031746031746031,
+        0.0996031746031746,
+        0.0996031746031746,
+        0.1007936507936508,
+        0.1
+      ]
+    },
+    "numeros_distintos": {
+      "tipo": "deciles",
+      "bordes": [
+        3.9000000000000057,
+        8.0,
+        12.0,
+        17.0,
+        21.0,
+        26.0,
+        31.0,
+        37.0,
+        45.0
+      ],
+      "proporciones": [
+        0.1,
+        0.08373015873015872,
+        0.09642857142857143,
+        0.11865079365079365,
+        0.0869047619047619,
+        0.1123015873015873,
+        0.1007936507936508,
+        0.09484126984126984,
+        0.10555555555555556,
+        0.1007936507936508
+      ]
+    },
+    "grupo_edad": {
+      "tipo": "categorias",
+      "valores": [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0
+      ],
+      "proporciones": [
+        0.04007936507936508,
+        0.3277777777777778,
+        0.4511904761904762,
+        0.12738095238095237,
+        0.05357142857142857
+      ]
+    },
+    "plan_tarifario": {
+      "tipo": "categorias",
+      "valores": [
+        1.0,
+        2.0
+      ],
+      "proporciones": [
+        0.9218253968253968,
+        0.07817460317460317
+      ]
+    },
+    "estado": {
+      "tipo": "categorias",
+      "valores": [
+        1.0,
+        2.0
+      ],
+      "proporciones": [
+        0.7523809523809524,
+        0.24761904761904763
+      ]
+    },
+    "valor_cliente": {
+      "tipo": "deciles",
+      "bordes": [
+        42.5115,
+        91.827,
+        134.37750000000005,
+        175.731,
+        228.6525,
+        300.58799999999997,
+        654.586000000003,
+        895.748,
+        1281.0509999999997
+      ],
+      "proporciones": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ]
+    }
+  },
+  "fecha_entrenamiento": "2026-10-16T15:16:49",
+  "version_python": "3.11.5",
+  "version_sklearn": "1.9.1",
+  "version_imblearn": "0.14.2",
+  "version_pandas": "3.0.6",
+  "version_numpy": "2.4.6",
+  "version_shap": "0.51.0"
+}
